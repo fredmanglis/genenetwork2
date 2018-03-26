@@ -24,7 +24,7 @@
 #
 # Last updated by NL 2011/03/23
 
-from __future__ import absolute_import, print_function, division
+
 
 import math
 import rpy2.robjects
@@ -62,7 +62,7 @@ def controlStrains(controls, strainlst):
         vars = []
 
         for _strain in strainlst:
-            if cvals[oneTraitName].has_key(_strain):
+            if _strain in cvals[oneTraitName]:
                 _val = cvals[oneTraitName][_strain].val
                 if _val != None:
                     strains.append(_strain)
@@ -84,7 +84,7 @@ def fixStrains(_strains,_controlstrains,_vals,_controlvals,_vars,_controlvars):
 
     def dictify(strains,vals,vars):
         subdict = {}
-        for i in xrange(len(strains)):
+        for i in range(len(strains)):
             subdict[strains[i]] = (vals[i],vars[i])
         return subdict
 
@@ -93,14 +93,14 @@ def fixStrains(_strains,_controlstrains,_vals,_controlvals,_vars,_controlvars):
     dicts.append(dictify(_strains,_vals,_vars))
 
     nCstrains = len(_controlstrains)
-    for i in xrange(nCstrains):
+    for i in range(nCstrains):
         dicts.append(dictify(_controlstrains[i],_controlvals[i],_controlvars[i]))
 
     _newstrains = []
     _vals = []
     _vars = []
-    _controlvals = [[] for x in xrange(nCstrains)]
-    _controlvars = [[] for x in xrange(nCstrains)]
+    _controlvals = [[] for x in range(nCstrains)]
+    _controlvars = [[] for x in range(nCstrains)]
 
     for strain in _strains:
         inall = True
@@ -112,7 +112,7 @@ def fixStrains(_strains,_controlstrains,_vals,_controlvals,_vars,_controlvars):
             _newstrains.append(strain)
             _vals.append(dicts[0][strain][0])
             _vars.append(dicts[0][strain][1])
-            for i in xrange(nCstrains):
+            for i in range(nCstrains):
                 _controlvals[i].append(dicts[i+1][strain][0])
                 _controlvars[i].append(dicts[i+1][strain][1])
 
@@ -348,11 +348,11 @@ pcor.rec <- function(x,y,z,method="p",na.rm=T){
         R_pcorr_function = rpy2.robjects.r['pcor.test']
         R_corr_test = rpy2.robjects.r['cor.test']
 
-        primary = rpy2.robjects.FloatVector(range(len(primaryVal)))
+        primary = rpy2.robjects.FloatVector(list(range(len(primaryVal))))
         for i in range(len(primaryVal)):
             primary[i] = primaryVal[i]
 
-        control = rpy2.robjects.r.matrix(rpy2.robjects.FloatVector( range(len(controlVals)*len(controlVals[0])) ), ncol=len(controlVals))
+        control = rpy2.robjects.r.matrix(rpy2.robjects.FloatVector( list(range(len(controlVals)*len(controlVals[0]))) ), ncol=len(controlVals))
         for i in range(len(controlVals)):
             for j in range(len(controlVals[0])):
                 control[i*len(controlVals[0]) + j] = controlVals[i][j]
@@ -372,23 +372,23 @@ pcor.rec <- function(x,y,z,method="p",na.rm=T){
                     if oneTargetVals[i] != None:
                         goodIndex.append(i)
 
-                this_primary = rpy2.robjects.FloatVector(range(len(goodIndex)))
+                this_primary = rpy2.robjects.FloatVector(list(range(len(goodIndex))))
                 for i in range(len(goodIndex)):
                     this_primary[i] = primaryVal[goodIndex[i]]
 
-                this_control = rpy2.robjects.r.matrix(rpy2.robjects.FloatVector( range(len(controlVals)*len(goodIndex)) ), ncol=len(controlVals))
+                this_control = rpy2.robjects.r.matrix(rpy2.robjects.FloatVector( list(range(len(controlVals)*len(goodIndex))) ), ncol=len(controlVals))
                 for i in range(len(controlVals)):
                     for j in range(len(goodIndex)):
                         this_control[i*len(goodIndex) + j] = controlVals[i][goodIndex[j]]
 
-                this_target = rpy2.robjects.FloatVector(range(len(goodIndex)))
+                this_target = rpy2.robjects.FloatVector(list(range(len(goodIndex))))
                 for i in range(len(goodIndex)):
                     this_target[i] = oneTargetVals[goodIndex[i]]
 
             else:
                 this_primary = primary
                 this_control = control
-                this_target = rpy2.robjects.FloatVector(range(len(oneTargetVals)))
+                this_target = rpy2.robjects.FloatVector(list(range(len(oneTargetVals))))
                 for i in range(len(oneTargetVals)):
                     this_target[i] = oneTargetVals[i]
 
@@ -506,7 +506,7 @@ def calZeroOrderCorr(primaryTrait, targetTrait, method='pearson'):
     #there might be None value in target_val
     target_val = targetTrait.exportData(primary_strain, type="val")
 
-    R_primary = rpy2.robjects.FloatVector(range(len(primary_val)))
+    R_primary = rpy2.robjects.FloatVector(list(range(len(primary_val))))
     for i in range(len(primary_val)):
         R_primary[i] = primary_val[i]
 
@@ -520,16 +520,16 @@ def calZeroOrderCorr(primaryTrait, targetTrait, method='pearson'):
 
         N = len(goodIndex)
 
-        R_primary = rpy2.robjects.FloatVector(range(len(goodIndex)))
+        R_primary = rpy2.robjects.FloatVector(list(range(len(goodIndex))))
         for i in range(len(goodIndex)):
             R_primary[i] = primary_val[goodIndex[i]]
 
-        R_target = rpy2.robjects.FloatVector(range(len(goodIndex)))
+        R_target = rpy2.robjects.FloatVector(list(range(len(goodIndex))))
         for i in range(len(goodIndex)):
             R_target[i] = target_val[goodIndex[i]]
 
     else:
-        R_target = rpy2.robjects.FloatVector(range(len(target_val)))
+        R_target = rpy2.robjects.FloatVector(list(range(len(target_val))))
         for i in range(len(target_val)):
             R_target[i] = target_val[i]
 
@@ -562,12 +562,12 @@ def calZeroOrderCorr(primaryTrait, targetTrait, method='pearson'):
 
 def cal_zero_order_corr_for_tiss (primaryValue=[], targetValue=[], method='pearson'):
 
-    R_primary = rpy2.robjects.FloatVector(range(len(primaryValue)))
+    R_primary = rpy2.robjects.FloatVector(list(range(len(primaryValue))))
     N = len(primaryValue)
     for i in range(len(primaryValue)):
         R_primary[i] = primaryValue[i]
 
-    R_target = rpy2.robjects.FloatVector(range(len(targetValue)))
+    R_target = rpy2.robjects.FloatVector(list(range(len(targetValue))))
     for i in range(len(targetValue)):
         R_target[i]=targetValue[i]
 
@@ -596,13 +596,13 @@ def batchCalTissueCorr(primaryTraitValue=[], SymbolValueDict={}, method='pearson
 
         R_corr_test = rpy2.robjects.r['cor.test']
 
-        R_primary = rpy2.robjects.FloatVector(range(len(primaryTraitValue)))
+        R_primary = rpy2.robjects.FloatVector(list(range(len(primaryTraitValue))))
 
         for i in range(len(primaryTraitValue)):
             R_primary[i] = primaryTraitValue[i]
 
-        for (oneTraitSymbol, oneTraitValue) in oneSymbolValueDict.iteritems():
-            R_target = rpy2.robjects.FloatVector(range(len(oneTraitValue)))
+        for (oneTraitSymbol, oneTraitValue) in oneSymbolValueDict.items():
+            R_target = rpy2.robjects.FloatVector(list(range(len(oneTraitValue))))
             for i in range(len(oneTraitValue)):
                 R_target[i] = oneTraitValue[i]
 
@@ -626,7 +626,7 @@ def batchCalTissueCorr(primaryTraitValue=[], SymbolValueDict={}, method='pearson
     if items_number <= 1000:
         symbolCorrDict, symbolPvalueDict = cal_tissue_corr(primaryTraitValue, SymbolValueDict, method)
     else:
-        items_list = SymbolValueDict.items()
+        items_list = list(SymbolValueDict.items())
 
         step = 1000
         job_number = math.ceil( float(items_number)/step )
@@ -888,11 +888,11 @@ def getCorrPvArray(cursor=None,priGeneSymbolList=[],symbolValuepairDict={}):
     for pkey in priGeneSymbolList:
         j = 0
         pkey = pkey.strip().lower()# key in symbolValuepairDict is low case
-        if symbolValuepairDict.has_key(pkey):
+        if pkey in symbolValuepairDict:
             priValue = symbolValuepairDict[pkey]
             for tkey in priGeneSymbolList:
                 tkey = tkey.strip().lower()# key in symbolValuepairDict is low case
-                if priValue and symbolValuepairDict.has_key(tkey):
+                if priValue and tkey in symbolValuepairDict:
                     tarValue = symbolValuepairDict[tkey]
 
                     if tarValue:
@@ -944,7 +944,7 @@ def calculateCorrOfAllTissueTrait(cursor=None, primaryTraitSymbol=None, TissuePr
     symbolPvalueDict = {}
 
     primaryTraitSymbolValueDict = getGeneSymbolTissueValueDictForTrait(cursor=cursor, GeneNameLst=[primaryTraitSymbol], TissueProbeSetFreezeId=TissueProbeSetFreezeId)
-    primaryTraitValue = primaryTraitSymbolValueDict.values()[0]
+    primaryTraitValue = list(primaryTraitSymbolValueDict.values())[0]
 
     SymbolValueDict = getGeneSymbolTissueValueDictForTrait(cursor=cursor, GeneNameLst=[], TissueProbeSetFreezeId=TissueProbeSetFreezeId)
 

@@ -26,7 +26,7 @@
 
 #from mod_python import Cookie
 
-from __future__ import print_function
+
 from pprint import pformat as pf
 
 import string
@@ -34,8 +34,8 @@ import os
 
 import reaper
 
-import webqtlConfig
-from webqtlCaseData import webqtlCaseData
+from . import webqtlConfig
+from .webqtlCaseData import webqtlCaseData
 from utility import webqtlUtil
 
 class webqtlFormData(object):
@@ -70,7 +70,7 @@ class webqtlFormData(object):
         except:
             self.remote_ip = '1.2.3.4'
 
-        if req and req.headers_in.has_key('referer'):
+        if req and 'referer' in req.headers_in:
             self.refURL = req.headers_in['referer']
         else:
             self.refURL = None
@@ -225,10 +225,10 @@ class webqtlFormData(object):
         print("bottle samplelist is:", samplelist)
         if traitfiledata:
             tt = traitfiledata.split()
-            values = map(webqtlUtil.StringAsFloat, tt)
+            values = list(map(webqtlUtil.StringAsFloat, tt))
         elif traitpastedata:
             tt = traitpastedata.split()
-            values = map(webqtlUtil.StringAsFloat, tt)
+            values = list(map(webqtlUtil.StringAsFloat, tt))
         else:
             print("mapping formdataasfloat")
             #values = map(self.FormDataAsFloat, samplelist)
@@ -245,12 +245,12 @@ class webqtlFormData(object):
 
         if variancefiledata:
             tt = variancefiledata.split()
-            variances = map(webqtlUtil.StringAsFloat, tt)
+            variances = list(map(webqtlUtil.StringAsFloat, tt))
         elif variancepastedata:
             tt = variancepastedata.split()
-            variances = map(webqtlUtil.StringAsFloat, tt)
+            variances = list(map(webqtlUtil.StringAsFloat, tt))
         else:
-            variances = map(self.FormVarianceAsFloat, samplelist)
+            variances = list(map(self.FormVarianceAsFloat, samplelist))
 
         if len(variances) < len(samplelist):
             variances += [None]*(len(samplelist) - len(variances))
@@ -259,11 +259,11 @@ class webqtlFormData(object):
 
         if Nfiledata:
             tt = string.split(Nfiledata)
-            nsamples = map(webqtlUtil.IntAsFloat, tt)
+            nsamples = list(map(webqtlUtil.IntAsFloat, tt))
             if len(nsamples) < len(samplelist):
                 nsamples += [None]*(len(samplelist) - len(nsamples))
         else:
-            nsamples = map(self.FormNAsFloat, samplelist)
+            nsamples = list(map(self.FormNAsFloat, samplelist))
 
         ##values, variances, nsamples is obsolete
         self.allTraitData = {}

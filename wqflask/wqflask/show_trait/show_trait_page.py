@@ -24,7 +24,7 @@
 #
 # Last updated by GeneNetwork Core Team 2010/10/20
 
-from __future__ import division, print_function
+
 
 from flask import request
 
@@ -134,7 +134,7 @@ class ShowTraitPage(DataEditingPage):
         fd.readGenotype()
 
         #if webqtlUtil.ListNotNull(map(lambda x:x.var, thisTrait.data.values())):
-        if any([x.variance for x in thisTrait.data.values()]):
+        if any([x.variance for x in list(thisTrait.data.values())]):
             fd.display_variance = True
             fd.formID = 'varianceChoice'
 

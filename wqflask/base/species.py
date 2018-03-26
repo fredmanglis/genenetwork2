@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, division
+
 
 import collections
 
@@ -88,13 +88,13 @@ class Chromosomes(object):
     def get_genome_mb_length(self):
         """Gets the sum of each chromosome's length in megabases"""
 
-        return sum([ind_chromosome.mb_length for ind_chromosome in self.chromosomes.values()])
+        return sum([ind_chromosome.mb_length for ind_chromosome in list(self.chromosomes.values())])
 
 
     def get_genome_cm_length(self):
         """Gets the sum of each chromosome's length in centimorgans"""
 
-        return sum([ind_chromosome.cm_length for ind_chromosome in self.chromosomes.values()])
+        return sum([ind_chromosome.cm_length for ind_chromosome in list(self.chromosomes.values())])
 
     def get_cm_length_list(self):
         """Chromosome length in centimorgans
@@ -118,7 +118,7 @@ class Chromosomes(object):
             chromosome.cm_length = self.cm_length_list[counter]
             #self.chromosomes[counter].cm_length = item
 
-        for key, value in self.chromosomes.items():
+        for key, value in list(self.chromosomes.items()):
             print("bread - %s: %s" % (key, pf(vars(value))))
 
 

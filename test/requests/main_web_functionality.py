@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import re
 import requests
 from lxml.html import parse

@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, division
+
 
 from base.trait import GeneralTrait
 from base import data_set  #import create_dataset
@@ -18,7 +18,7 @@ import rpy2.robjects as ro
 import numpy as np
 from scipy import linalg
 
-import cPickle as pickle
+import pickle as pickle
 import itertools
 
 import simplejson as json
@@ -255,7 +255,7 @@ class MarkerRegression(object):
                 if marker['chr1'] > 0 or marker['chr1'] == "X" or marker['chr1'] == "X/Y":
                     if marker['chr1'] > highest_chr or marker['chr1'] == "X" or marker['chr1'] == "X/Y":
                         highest_chr = marker['chr1']
-                    if 'lod_score' in marker.keys():
+                    if 'lod_score' in list(marker.keys()):
                         self.qtl_results.append(marker)
 
             self.trimmed_markers = results
@@ -284,7 +284,7 @@ class MarkerRegression(object):
                 if marker['chr'] > 0 or marker['chr'] == "X" or marker['chr'] == "X/Y":
                     if marker['chr'] > highest_chr or marker['chr'] == "X" or marker['chr'] == "X/Y":
                         highest_chr = marker['chr']
-                    if ('lod_score' in marker.keys()) or ('lrs_value' in marker.keys()):
+                    if ('lod_score' in list(marker.keys())) or ('lrs_value' in list(marker.keys())):
                         self.qtl_results.append(marker)
 
             export_mapping_results(self.dataset, self.this_trait, self.qtl_results, self.mapping_results_path, self.mapping_scale, self.score_type)
@@ -310,7 +310,7 @@ class MarkerRegression(object):
                     else:
                         self.json_data['chr'].append(str(qtl['chr']))
                     self.json_data['pos'].append(qtl['Mb'])
-                    if 'lrs_value' in qtl.keys():
+                    if 'lrs_value' in list(qtl.keys()):
                         self.json_data['lod.hk'].append(str(qtl['lrs_value']))
                     else:
                         self.json_data['lod.hk'].append(str(qtl['lod_score']))
@@ -319,7 +319,7 @@ class MarkerRegression(object):
                 #Get chromosome lengths for drawing the interval map plot
                 chromosome_mb_lengths = {}
                 self.json_data['chrnames'] = []
-                for key in self.species.chromosomes.chromosomes.keys():
+                for key in list(self.species.chromosomes.chromosomes.keys()):
                     self.json_data['chrnames'].append([self.species.chromosomes.chromosomes[key].name, self.species.chromosomes.chromosomes[key].mb_length])
                     chromosome_mb_lengths[key] = self.species.chromosomes.chromosomes[key].mb_length
 
@@ -631,21 +631,21 @@ def export_mapping_results(dataset, trait, markers, results_path, mapping_scale,
             output_file.write("Mb," + score_type)
         else:
             output_file.write("Cm," + score_type)
-        if "additive" in markers[0].keys():
+        if "additive" in list(markers[0].keys()):
             output_file.write(",Additive")
-        if "dominance" in markers[0].keys():
+        if "dominance" in list(markers[0].keys()):
             output_file.write(",Dominance")
         output_file.write("\n")
         for i, marker in enumerate(markers):
             logger.debug("THE MARKER:", marker)
             output_file.write(marker['name'] + "," + str(marker['chr']) + "," + str(marker['Mb']) + ",")
-            if "lod_score" in marker.keys():
+            if "lod_score" in list(marker.keys()):
                 output_file.write(str(marker['lod_score']))
             else:
                 output_file.write(str(marker['lrs_value']))
-            if "additive" in marker.keys():
+            if "additive" in list(marker.keys()):
                 output_file.write("," + str(marker['additive']))
-            if "dominance" in marker.keys():
+            if "dominance" in list(marker.keys()):
                 output_file.write("," + str(marker['dominance']))
             if i < (len(markers) - 1):
                 output_file.write("\n")
@@ -653,7 +653,7 @@ def export_mapping_results(dataset, trait, markers, results_path, mapping_scale,
 def trim_markers_for_table(markers):
     num_markers = len(markers)
 
-    if 'lod_score' in markers[0].keys():
+    if 'lod_score' in list(markers[0].keys()):
         sorted_markers = sorted(markers, key=lambda k: k['lod_score'], reverse=True)
     else:
         sorted_markers = sorted(markers, key=lambda k: k['lrs_value'], reverse=True)
@@ -667,4 +667,4 @@ def trim_markers_for_table(markers):
 
 
 if __name__ == '__main__':
-    import cPickle as pickle
+    import pickle as pickle

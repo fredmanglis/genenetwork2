@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, division
+
 
 import string
 
@@ -24,7 +24,7 @@ def loadGenes(chrName, diffCol, startMb, endMb, webqtlDb =None, species='mouse')
 	
 	##List current Species and other Species
 	speciesId = speciesDict[species]
-	otherSpecies = map(lambda X: [X, speciesDict[X]], speciesDict.keys())
+	otherSpecies = [[X, speciesDict[X]] for X in list(speciesDict.keys())]
 	otherSpecies.remove([species, speciesId])
 
 	results = g.db.execute("""

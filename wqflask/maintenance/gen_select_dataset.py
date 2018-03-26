@@ -30,7 +30,7 @@ It needs to be run manually when database has been changed. Run it as
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
 
-from __future__ import print_function, division
+
 
 #from flask import config
 #
@@ -50,7 +50,7 @@ from utility.tools import locate, locate_ignore_error, TEMPDIR, SQL_URI
 import MySQLdb
 
 import simplejson as json
-import urlparse
+import urllib.parse
 
 
 #import sqlalchemy as sa
@@ -69,7 +69,7 @@ print('WARNING: This conversion is now OBSOLETE as the menu gets built from the 
 def parse_db_uri(db_uri):
     """Converts a database URI to the db name, host name, user name, and password"""
 
-    parsed_uri = urlparse.urlparse(SQL_URI)
+    parsed_uri = urllib.parse.urlparse(SQL_URI)
 
     db_conn_info = dict(
                         db = parsed_uri.path[1:],
@@ -111,7 +111,7 @@ def get_types(groups):
     """Build types list"""
     types = {}
     #print("Groups: ", pf(groups))
-    for species, group_dict in groups.iteritems():
+    for species, group_dict in groups.items():
         types[species] = {}
         for group_name, _group_full_name in group_dict:
             # make group an alias to shorten the code
@@ -188,9 +188,9 @@ def build_types(species, group):
 def get_datasets(types):
     """Build datasets list"""
     datasets = {}
-    for species, group_dict in types.iteritems():
+    for species, group_dict in types.items():
         datasets[species] = {}
-        for group, type_list in group_dict.iteritems():
+        for group, type_list in group_dict.items():
             #print("type_list: ", type_list)
             datasets[species][group] = {}
             for type_name in type_list:

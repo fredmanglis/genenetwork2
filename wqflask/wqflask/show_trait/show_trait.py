@@ -1,9 +1,9 @@
-from __future__ import absolute_import, print_function, division
+
 
 import string
 import os
 import datetime
-import cPickle
+import pickle
 import uuid
 import json as json
 #import pyXLWriter as xl
@@ -241,7 +241,7 @@ class ShowTrait(object):
             this_group = self.dataset.group.name
 
         # We're checking a string here!
-        assert isinstance(this_group, basestring), "We need a string type thing here"
+        assert isinstance(this_group, str), "We need a string type thing here"
         if this_group[:3] == 'BXD':
             this_group = 'BXD'
 
@@ -272,7 +272,7 @@ class ShowTrait(object):
 
         if not self.temp_trait:
             other_sample_names = []
-            for sample in self.this_trait.data.keys():
+            for sample in list(self.this_trait.data.keys()):
                 if (self.this_trait.data[sample].name2 in primary_sample_names) and (self.this_trait.data[sample].name not in primary_sample_names):
                     primary_sample_names.append(self.this_trait.data[sample].name)
                     primary_sample_names.remove(self.this_trait.data[sample].name2)

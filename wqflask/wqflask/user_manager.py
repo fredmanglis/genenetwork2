@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 
 """Used to Access things in template like this:
 (BUT NOW OUT OF DATE)
@@ -19,7 +19,7 @@ import hashlib
 import hmac
 import base64
 
-import urlparse
+import urllib.parse
 
 import simplejson as json
 

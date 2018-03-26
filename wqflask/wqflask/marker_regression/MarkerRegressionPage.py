@@ -28,7 +28,7 @@ import math
 from math import *
 import piddle as pid
 import sys,os
-import httplib, urllib
+import http.client, urllib.request, urllib.parse, urllib.error
 
 from htmlgen import HTMLgen2 as HT
 from utility import Plot
@@ -41,9 +41,10 @@ from db import webqtlDatabaseFunction
 from base.GeneralObject import GeneralObject
 
 import reaper
-import cPickle
+import pickle
 from utility.THCell import THCell
 from utility.TDCell import TDCell
+from functools import reduce
 
 class MarkerRegressionPage(templatePage):
 
@@ -113,7 +114,7 @@ class MarkerRegressionPage(templatePage):
 
                 # creat object for result table for sort function
                 objfile = open('%s.obj' % (webqtlConfig.TMPDIR+filename), 'wb')
-                cPickle.dump(tblobj, objfile)
+                pickle.dump(tblobj, objfile)
                 objfile.close()
 
                 sortby = ("Index", "up")
@@ -125,7 +126,7 @@ class MarkerRegressionPage(templatePage):
                 descriptionTable.append(bottomInfo)
 
                 # get each chr's length
-                self.ChrLengthMbList = map(lambda x: x/1000000.0, self.ChrLengthMbList) # change unit from bp to mb
+                self.ChrLengthMbList = [x/1000000.0 for x in self.ChrLengthMbList] # change unit from bp to mb
                 self.ChrLengthMbSum = reduce(lambda x, y:x+y, self.ChrLengthMbList, 0.0)# get total length of all chrs
                 if self.ChrLengthMbList:
                     self.GraphInterval = self.ChrLengthMbSum/(len(self.ChrLengthMbList)*12) #Empirical Mb interval
@@ -195,7 +196,7 @@ class MarkerRegressionPage(templatePage):
 
                 # creat object for result table for sort function
                 objfile = open('%s.obj' % (webqtlConfig.TMPDIR+filename), 'wb')
-                cPickle.dump(tblobj, objfile)
+                pickle.dump(tblobj, objfile)
                 objfile.close()
 
                 sortby = ("Index", "up")
@@ -228,10 +229,10 @@ class MarkerRegressionPage(templatePage):
                                 Chr_Length.Name in (%s)
                         Order by
                                 OrderId
-                        """ % (fd.RISet, string.join(map(lambda X: "'%s'" % X[0], self.ChrList[1:]), ", ")))
+                        """ % (fd.RISet, string.join(["'%s'" % X[0] for X in self.ChrList[1:]], ", ")))
 
                 self.ChrLengthMbList = self.cursor.fetchall()
-                self.ChrLengthMbList = map(lambda x: x[0]/1000000.0, self.ChrLengthMbList)
+                self.ChrLengthMbList = [x[0]/1000000.0 for x in self.ChrLengthMbList]
                 self.ChrLengthMbSum = reduce(lambda x, y:x+y, self.ChrLengthMbList, 0.0)
                 if self.ChrLengthMbList:
                     self.MbGraphInterval = self.ChrLengthMbSum/(len(self.ChrLengthMbList)*12) #Empirical Mb interval
@@ -334,7 +335,7 @@ class MarkerRegressionPage(templatePage):
                 enctype='multipart/form-data', name=locusFormName, submit=HT.Input(type='hidden'))
         hddn = {'FormID':'showDatabase','ProbeSetID':'_','database':RISet+"Geno",'CellID':'_', \
                 'RISet':RISet, 'incparentsf1':'on'}
-        for key in hddn.keys():
+        for key in list(hddn.keys()):
             locusForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
 
         regressionHeading = HT.Paragraph('Genome Association Report')
@@ -368,8 +369,8 @@ class MarkerRegressionPage(templatePage):
         index=1
         for chr in chrList:
 
-            if plinkResultDict.has_key(chr):
-                if chr in ChrNameOrderIdDict.keys():
+            if chr in plinkResultDict:
+                if chr in list(ChrNameOrderIdDict.keys()):
                     chrOrderId =ChrNameOrderIdDict[chr]
                 else:
                     chrOrderId=chr
@@ -445,7 +446,7 @@ class MarkerRegressionPage(templatePage):
         if _dispAllLRS:
             filtered = qtlresults[:]
         else:
-            filtered = filter(lambda x, y=fd.suggestive: x.lrs > y, qtlresults)
+            filtered = list(filter(lambda x, y=fd.suggestive: x.lrs > y, qtlresults))
         if len(filtered) == 0:
             qtlresults2 = qtlresults[:]
             qtlresults2.sort()
@@ -485,7 +486,7 @@ class MarkerRegressionPage(templatePage):
                 enctype='multipart/form-data', name=locusFormName, submit=HT.Input(type='hidden'))
         hddn = {'FormID':'showDatabase','ProbeSetID':'_','database':fd.RISet+"Geno",'CellID':'_', \
                 'RISet':fd.RISet, 'incparentsf1':'on'}
-        for key in hddn.keys():
+        for key in list(hddn.keys()):
             locusForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
 
         regressionHeading = HT.Paragraph('Genome Association Report')
@@ -538,7 +539,7 @@ class MarkerRegressionPage(templatePage):
                 else:
                     lrs = HT.TD('%3.3f' % LRS,Class=cellColorStyle)
 
-                if ii.locus.chr in ChrNameOrderIdDict.keys():
+                if ii.locus.chr in list(ChrNameOrderIdDict.keys()):
                     chrOrderId =ChrNameOrderIdDict[ii.locus.chr]
                 else:
                     chrOrderId=ii.locus.chr
@@ -573,7 +574,7 @@ class MarkerRegressionPage(templatePage):
                 else:
                     lrs = HT.TD('%3.3f' % LRS,Class=cellColorStyle)
 
-                if ii.locus.chr in ChrNameOrderIdDict.keys():
+                if ii.locus.chr in list(ChrNameOrderIdDict.keys()):
                     chrOrderId =ChrNameOrderIdDict[ii.locus.chr]
                 else:
                     chrOrderId=ii.locus.chr
@@ -797,7 +798,7 @@ class MarkerRegressionPage(templatePage):
 
         for i, chr in enumerate(ChrList):
 
-            if      plinkResultDict.has_key(chr):
+            if      chr in plinkResultDict:
                 plinkresultList = plinkResultDict[chr]
 
                 m = 0
@@ -862,7 +863,7 @@ class MarkerRegressionPage(templatePage):
             lodm = 1.0
 
         if self.lrsMax <= 0:  #sliding scale
-            LRSMax = max(map(max, self.qtlresults)).lrs
+            LRSMax = max(list(map(max, self.qtlresults))).lrs
             #genotype trait will give infinite LRS
             LRSMax = min(LRSMax, webqtlConfig.MAXLRS)
             LRSMax = max(self.significance, LRSMax)
@@ -935,9 +936,9 @@ class MarkerRegressionPage(templatePage):
         if self.multipleInterval:
             lrsEdgeWidth = 1
         else:
-            additiveMax = max(map(lambda X : abs(X.additive), self.qtlresults[0]))
+            additiveMax = max([abs(X.additive) for X in self.qtlresults[0]])
             if INTERCROSS:
-                dominanceMax = max(map(lambda X : abs(X.dominance), self.qtlresults[0]))
+                dominanceMax = max([abs(X.dominance) for X in self.qtlresults[0]])
             else:
                 dominanceMax = -1
             lrsEdgeWidth = 2
@@ -1503,7 +1504,7 @@ class MarkerRegressionPage(templatePage):
             lineList=self.buildLineList(line=line)
 
             # only keep the records whose chromosome name is in db
-            if ChrOrderIdNameDict.has_key(int(lineList[0])) and lineList[-1] and lineList[-1].strip()!='NA':
+            if int(lineList[0]) in ChrOrderIdNameDict and lineList[-1] and lineList[-1].strip()!='NA':
 
                 chrName=ChrOrderIdNameDict[int(lineList[0])]
                 snp = lineList[1]
@@ -1511,7 +1512,7 @@ class MarkerRegressionPage(templatePage):
                 pValue = float(lineList[-1])
                 pValueList.append(pValue)
 
-                if plinkResultDict.has_key(chrName):
+                if chrName in plinkResultDict:
                     valueList=plinkResultDict[chrName]
 
                     # pvalue range is [0,1]
@@ -1554,8 +1555,8 @@ class MarkerRegressionPage(templatePage):
     def buildLineList(self,line=None):
 
         lineList = string.split(string.strip(line),' ')# irregular number of whitespaces between columns
-        lineList =[ item for item in lineList if item <>'']
-        lineList = map(string.strip, lineList)
+        lineList =[ item for item in lineList if item !='']
+        lineList = list(map(string.strip, lineList))
 
         return lineList
 
@@ -1603,7 +1604,7 @@ class MarkerRegressionPage(templatePage):
 
         while line:
             lineList=string.split(string.strip(line),'\t')
-            lineList=map(string.strip,lineList)
+            lineList=list(map(string.strip,lineList))
 
             strainName=lineList[0]
             strainNameList.append(strainName)

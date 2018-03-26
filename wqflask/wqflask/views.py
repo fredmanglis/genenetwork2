@@ -2,7 +2,7 @@
 #
 # Main routing table for GN2
 
-from __future__ import absolute_import, division, print_function
+
 
 import traceback # for error page
 import os        # for error gifs
@@ -12,11 +12,11 @@ import time      # for errors
 import sys
 import csv
 import xlsxwriter
-import StringIO  # Todo: Use cStringIO?
+import io  # Todo: Use cStringIO?
 
 import gc
 
-import cPickle as pickle
+import pickle as pickle
 import uuid
 
 import simplejson as json
@@ -337,7 +337,7 @@ def export_trait_excel():
 
     logger.info("sample_data - type: %s -- size: %s" % (type(sample_data), len(sample_data)))
 
-    buff = StringIO.StringIO()
+    buff = io.StringIO()
     workbook = xlsxwriter.Workbook(buff, {'in_memory': True})
     worksheet = workbook.add_worksheet()
     for i, row in enumerate(sample_data):
@@ -363,7 +363,7 @@ def export_trait_csv():
 
     logger.info("sample_data - type: %s -- size: %s" % (type(sample_data), len(sample_data)))
 
-    buff = StringIO.StringIO()
+    buff = io.StringIO()
     writer = csv.writer(buff)
     for row in sample_data:
         writer.writerow(row)
@@ -393,7 +393,7 @@ def export_perm_data():
     num_perm = float(request.form['num_perm'])
     perm_data = json.loads(request.form['perm_results'])
 
-    buff = StringIO.StringIO()
+    buff = io.StringIO()
     writer = csv.writer(buff)
     writer.writerow(["Suggestive LRS (p=0.63) = " + str(perm_data[int(num_perm*0.37-1)])])
     writer.writerow(["Significant LRS (p=0.05) = " + str(perm_data[int(num_perm*0.95-1)])])
@@ -471,7 +471,7 @@ def heatmap_page():
 
             result = template_vars.__dict__
 
-            for item in template_vars.__dict__.keys():
+            for item in list(template_vars.__dict__.keys()):
                 logger.info("  ---**--- {}: {}".format(type(template_vars.__dict__[item]), item))
 
             pickled_result = pickle.dumps(result, pickle.HIGHEST_PROTOCOL)
@@ -495,7 +495,7 @@ def mapping_results_container_page():
 def loading_page():
     logger.error(request.url)
     initial_start_vars = request.form
-    logger.debug("Marker regression called with initial_start_vars:", initial_start_vars.items())
+    logger.debug("Marker regression called with initial_start_vars:", list(initial_start_vars.items()))
     #temp_uuid = initial_start_vars['temp_uuid']
     wanted = (
         'temp_uuid',
@@ -539,7 +539,7 @@ def loading_page():
     )
     start_vars_container = {}
     start_vars = {}
-    for key, value in initial_start_vars.iteritems():
+    for key, value in initial_start_vars.items():
         if key in wanted or key.startswith(('value:')):
             start_vars[key] = value
 
@@ -551,7 +551,7 @@ def loading_page():
 @app.route("/marker_regression", methods=('POST',))
 def marker_regression_page():
     initial_start_vars = request.form
-    logger.debug("Marker regression called with initial_start_vars:", initial_start_vars.items())
+    logger.debug("Marker regression called with initial_start_vars:", list(initial_start_vars.items()))
     logger.error(request.url)
     temp_uuid = initial_start_vars['temp_uuid']
     wanted = (
@@ -597,7 +597,7 @@ def marker_regression_page():
         'mapmodel_rqtl_geno'
     )
     start_vars = {}
-    for key, value in initial_start_vars.iteritems():
+    for key, value in initial_start_vars.items():
         if key in wanted or key.startswith(('value:')):
             start_vars[key] = value
     logger.debug("Marker regression called with start_vars:", start_vars)
@@ -801,5 +801,5 @@ def json_default_handler(obj):
     #     logger.info("Not going to serialize Dataset")
     #    return None
     else:
-        raise TypeError, 'Object of type %s with value of %s is not JSON serializable' % (
-            type(obj), repr(obj))
+        raise TypeError('Object of type %s with value of %s is not JSON serializable' % (
+            type(obj), repr(obj)))

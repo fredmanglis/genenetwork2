@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+
 
 import string
 import resource
@@ -153,7 +153,7 @@ class GeneralTrait(object):
         """
         result = []
         for sample in samplelist:
-            if self.data.has_key(sample):
+            if sample in self.data:
                 if the_type=='val':
                     result.append(self.data[sample].val)
                 elif the_type=='var':
@@ -161,7 +161,7 @@ class GeneralTrait(object):
                 elif the_type=='N':
                     result.append(self.data[sample].N)
                 else:
-                    raise KeyError, `the_type`+' the_type is incorrect.'
+                    raise KeyError(repr(the_type)+' the_type is incorrect.')
             else:
                 result.append(None)
         return result
@@ -176,7 +176,7 @@ class GeneralTrait(object):
         vals = []
         the_vars = []
         sample_aliases = []
-        for sample_name, sample_data in self.data.items():
+        for sample_name, sample_data in list(self.data.items()):
             if sample_data.value != None:
                 if not include_variance or sample_data.variance != None:
                     samples.append(sample_name)
@@ -314,7 +314,7 @@ def get_sample_data():
 
     trait_ob = GeneralTrait(name=trait, dataset_name=dataset)
 
-    return json.dumps([trait, {key: value.value for key, value in trait_ob.data.iteritems() }])
+    return json.dumps([trait, {key: value.value for key, value in trait_ob.data.items() }])
 
     #jsonable_sample_data = {}
     #for sample in trait_ob.data.iteritems():
@@ -505,8 +505,8 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
         #XZ: assign SQL query result to trait attributes.
         for i, field in enumerate(dataset.display_fields):
             holder = trait_info[i]
-            if isinstance(trait_info[i], basestring):
-                holder = unicode(trait_info[i], "utf-8", "ignore")
+            if isinstance(trait_info[i], str):
+                holder = str(trait_info[i], "utf-8", "ignore")
             setattr(trait, field, holder)
 
         if dataset.type == 'Publish':
@@ -574,8 +574,8 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                 if result:
                     trait.homologeneid = result[0]
 
-            description_string = unicode(str(trait.description).strip(codecs.BOM_UTF8), 'utf-8')
-            target_string = unicode(str(trait.probe_target_description).strip(codecs.BOM_UTF8), 'utf-8')
+            description_string = str(str(trait.description).strip(codecs.BOM_UTF8), 'utf-8')
+            target_string = str(str(trait.probe_target_description).strip(codecs.BOM_UTF8), 'utf-8')
 
             if len(description_string) > 1 and description_string != 'None':
                 description_display = description_string
@@ -713,6 +713,6 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                     trait.LRS_score_repr = LRS_score_repr = '%3.1f' % trait.lrs
                     trait.LRS_score_value = LRS_score_value = trait.lrs
     else:
-        raise KeyError, `trait.name`+' information is not found in the database.'
+        raise KeyError(repr(trait.name)+' information is not found in the database.')
         
     return trait

@@ -24,7 +24,7 @@
 #
 # Last updated by GeneNetwork Core Team 2010/10/20
 
-from __future__ import print_function
+
 
 import piddle as pid
 from pprint import pformat as pf
@@ -39,11 +39,12 @@ import reaper
 # sys.path.append("..") Never in a running webserver
 from basicStatistics import corestats
 
-import svg
-import webqtlUtil
+from . import svg
+from . import webqtlUtil
 from base import webqtlConfig
 
 import utility.logger
+from functools import reduce
 logger = utility.logger.getLogger(__name__ )
 
 def cformat(d, rank=0):
@@ -79,7 +80,7 @@ def frange(start, end=None, inc=1.0):
     # Need to adjust the count. AFAICT, it always comes up one short.
         count += 1
     L = [start] * count
-    for i in xrange(1, count):
+    for i in range(1, count):
         L[i] = start + i * inc
     return L
 
@@ -460,18 +461,18 @@ def plotSecurity(canvas, text="12345"):
 
     for i in range(30):
         randomColor = pid.Color(0.6+0.4*random.random(), 0.6+0.4*random.random(), 0.6+0.4*random.random())
-        scaleFont=pid.Font(ttf="cour",size=random.choice(range(20, 50)))
+        scaleFont=pid.Font(ttf="cour",size=random.choice(list(range(20, 50))))
         canvas.drawString(random.choice('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),
                 int(random.random()*plotWidth), int(random.random()*plotHeight), font=scaleFont,
-                color=randomColor, angle=random.choice(range(-45, 50)))
+                color=randomColor, angle=random.choice(list(range(-45, 50))))
 
     step = (plotWidth-20)/len(text)
     startX = 20
     for item in text:
         randomColor = pid.Color(0.6*random.random(),0.6*random.random(), 0.6*random.random())
-        scaleFont=pid.Font(ttf="verdana",size=random.choice(range(50, 60)),bold=1)
+        scaleFont=pid.Font(ttf="verdana",size=random.choice(list(range(50, 60))),bold=1)
         canvas.drawString(item, startX, plotHeight/2-10, font=scaleFont,
-                color=randomColor, angle=random.choice(range(-45, 50)))
+                color=randomColor, angle=random.choice(list(range(-45, 50))))
         startX += step
 
 # parameter: data is either object returned by reaper permutation function (called by MarkerRegressionPage.py)
@@ -590,7 +591,7 @@ def plotBarText(canvas, data, label, variance=None, barColor=pid.blue, axesColor
        drawZero = 0
 
     #X axis
-    X = range(NNN)
+    X = list(range(NNN))
     Xll= 0
     Xur= NNN-1
 
@@ -961,8 +962,8 @@ def plotXYSVG(drawSpace, dataX, dataY, rank=0, dataLabel=[], plotColor = "black"
     drawSpace.addElement(r)
 
     #calculate data points
-    data = map(lambda X, Y: (X, Y), dataXPrimary, dataYPrimary)
-    xCoord = map(lambda X, Y: ((X-xLow)*xScale + xLeftOffset, yTopOffset+plotHeight-(Y-yLow)*yScale), dataXPrimary, dataYPrimary)
+    data = list(map(lambda X, Y: (X, Y), dataXPrimary, dataYPrimary))
+    xCoord = list(map(lambda X, Y: ((X-xLow)*xScale + xLeftOffset, yTopOffset+plotHeight-(Y-yLow)*yScale), dataXPrimary, dataYPrimary))
     labelFontF = "verdana"
     labelFontS = 11
 

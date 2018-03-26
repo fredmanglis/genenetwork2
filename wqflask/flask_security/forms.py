@@ -10,7 +10,7 @@
 """
 
 import inspect
-import urlparse
+import urllib.parse
 
 import flask_wtf as wtf
 
@@ -93,8 +93,8 @@ class Form(BaseForm):
         #from wqflask import tracer
         #tracer.turn_on()
         #print "imported tracer"
-        print "in Form, args:", args
-        print "in Form, kwargs:", kwargs
+        print("in Form, args:", args)
+        print("in Form, kwargs:", kwargs)
         if current_app.testing:
             self.TIME_LIMIT = None
         super(Form, self).__init__(*args, **kwargs)
@@ -142,8 +142,8 @@ class NextFormMixin():
     next = HiddenField()
 
     def validate_next(self, field):
-        url_next = urlparse.urlsplit(field.data)
-        url_base = urlparse.urlsplit(request.host_url)
+        url_next = urllib.parse.urlsplit(field.data)
+        url_base = urllib.parse.urlsplit(request.host_url)
         if url_next.netloc and url_next.netloc != url_base.netloc:
             field.data = ''
             raise ValidationError(get_message('INVALID_REDIRECT')[0])
@@ -154,13 +154,13 @@ class RegisterFormMixin():
 
     def to_dict(form):
         def is_field_and_user_attr(member):
-            print "in ifaua:", member
+            print("in ifaua:", member)
             return isinstance(member, Field) and \
                 hasattr(_datastore.user_model, member.name)
 
-        print("green:", vars(form))
+        print(("green:", vars(form)))
         fields = inspect.getmembers(form, is_field_and_user_attr)
-        print("fields:" ,vars(form))
+        print(("fields:" ,vars(form)))
         return dict((key, value.data) for key, value in fields)
 
 

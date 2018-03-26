@@ -104,16 +104,16 @@ class CTL(object):
         self.trait_db_list = [trait.strip() for trait in requestform['trait_list'].split(',')]
         self.trait_db_list = [x for x in self.trait_db_list if x]
 
-        print("strategy:", requestform.get("strategy"))
+        print(("strategy:", requestform.get("strategy")))
         strategy = requestform.get("strategy")
 
-        print("nperm:", requestform.get("nperm"))
+        print(("nperm:", requestform.get("nperm")))
         nperm = int(requestform.get("nperm"))
 
-        print("parametric:", requestform.get("parametric"))
+        print(("parametric:", requestform.get("parametric")))
         parametric = bool(requestform.get("parametric"))
 
-        print("significance:", requestform.get("significance"))
+        print(("significance:", requestform.get("significance")))
         significance = float(requestform.get("significance"))
 
         # Get the name of the .geno file belonging to the first phenotype
@@ -123,7 +123,7 @@ class CTL(object):
         genofilelocation = locate(dataset.group.name + ".geno", "genotype")
         parser = genofile_parser.ConvertGenoFile(genofilelocation)
         parser.process_csv()
-        print(dataset.group)
+        print((dataset.group))
         # Create a genotype matrix
         individuals = parser.individuals
         markers = []
@@ -133,20 +133,20 @@ class CTL(object):
           markers.append(marker["genotypes"])
 
         genotypes = list(itertools.chain(*markers))
-        print(len(genotypes) / len(individuals), "==", len(parser.markers))
+        print((len(genotypes) / len(individuals), "==", len(parser.markers)))
 
         rGeno = r_t(ro.r.matrix(r_unlist(genotypes), nrow=len(markernames), ncol=len(individuals), dimnames = r_list(markernames, individuals), byrow=True))
 
         # Create a phenotype matrix
         traits = []
         for trait in self.trait_db_list:
-          print("retrieving data for", trait)
+          print(("retrieving data for", trait))
           if trait != "":
             ts = trait.split(':')
             gt = TRAIT.GeneralTrait(name = ts[0], dataset_name = ts[1])
             gt = TRAIT.retrieve_sample_data(gt, dataset, individuals)
             for ind in individuals:
-              if ind in gt.data.keys():
+              if ind in list(gt.data.keys()):
                 traits.append(gt.data[ind].value)
               else:
                 traits.append("-999")
@@ -196,10 +196,10 @@ class CTL(object):
         sys.stdout.flush()
 
         # Create the interactive graph for cytoscape visualization (Nodes and Edges)
-        print(type(significant))
+        print((type(significant)))
         if not type(significant) == ri.RNULLType:
           for x in range(len(significant[0])):
-            print(significant[0][x], significant[1][x], significant[2][x])            # Debug to console
+            print((significant[0][x], significant[1][x], significant[2][x]))            # Debug to console
             tsS = significant[0][x].split(':')                                        # Source
             tsT = significant[2][x].split(':')                                        # Target
             gtS = TRAIT.GeneralTrait(name = tsS[0], dataset_name = tsS[1])            # Retrieve Source info from the DB
@@ -214,7 +214,7 @@ class CTL(object):
         self.elements = json.dumps(self.nodes_list + self.edges_list)
 
     def loadImage(self, path, name):
-        print("pre-loading imgage results:", self.results[path])
+        print(("pre-loading imgage results:", self.results[path]))
         imgfile = open(self.results[path], 'rb')
         imgdata = imgfile.read()
         imgB64 = imgdata.encode("base64")

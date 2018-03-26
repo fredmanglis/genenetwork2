@@ -17,7 +17,7 @@ def run_rqtl_geno(vals, dataset, method, model, permCheck, num_perm, do_control,
     png           = ro.r["png"]                     # Map the png function
     dev_off       = ro.r["dev.off"]                 # Map the device off function
 
-    print(r_library("qtl"))                         # Load R/qtl
+    print((r_library("qtl")))                         # Load R/qtl
 
     ## Get pointers to some R/qtl functions
     scanone         = ro.r["scanone"]               # Map the scanone function

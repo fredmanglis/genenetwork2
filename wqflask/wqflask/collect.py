@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 
 
 import os
@@ -11,7 +11,7 @@ import hashlib
 import hmac
 import base64
 
-import urlparse
+import urllib.parse
 
 import simplejson as json
 
@@ -158,7 +158,7 @@ class UserCollection(object):
     """User is logged in"""
 
     def add_traits(self, params, collection_name):
-        print("---> params are:", params.keys())
+        print("---> params are:", list(params.keys()))
         print("     type(params):", type(params))
         if collection_name=="Default":
             uc = g.user_session.user_ob.get_collection_by_name("Default")
@@ -195,7 +195,7 @@ class UserCollection(object):
 
 def process_traits(unprocessed_traits):
     #print("unprocessed_traits are:", unprocessed_traits)
-    if isinstance(unprocessed_traits, basestring):
+    if isinstance(unprocessed_traits, str):
         unprocessed_traits = unprocessed_traits.split(",")
     traits = set()
     for trait in unprocessed_traits:

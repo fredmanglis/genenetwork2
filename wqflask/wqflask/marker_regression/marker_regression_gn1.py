@@ -29,8 +29,8 @@ import string
 from math import *
 import piddle as pid
 import sys,os
-import cPickle
-import httplib, urllib
+import pickle
+import http.client, urllib.request, urllib.parse, urllib.error
 
 from flask import Flask, g
 
@@ -45,6 +45,7 @@ from wqflask.interval_analyst import GeneUtil
 from base.webqtlConfig import TMPDIR, GENERATED_TEXT_DIR, GENERATED_IMAGE_DIR
 
 import utility.logger
+from functools import reduce
 logger = utility.logger.getLogger(__name__ )
 
 #########################################
@@ -224,7 +225,7 @@ class MarkerRegression(object):
 
         self.manhattan_plot = start_vars['manhattan_plot']
 
-        if 'permCheck' in start_vars.keys():
+        if 'permCheck' in list(start_vars.keys()):
             self.permChecked = start_vars['permCheck']
         else:
             self.permChecked = False
@@ -237,32 +238,32 @@ class MarkerRegression(object):
         else:
             self.nperm = 0
 
-        if 'bootCheck' in start_vars.keys():
+        if 'bootCheck' in list(start_vars.keys()):
             self.bootChecked = start_vars['bootCheck']
         else:
             self.bootChecked = False
-        if 'num_bootstrap' in start_vars.keys():
+        if 'num_bootstrap' in list(start_vars.keys()):
             self.nboot = int(start_vars['num_bootstrap'])
         else:
             self.nboot = 0
-        if 'bootstrap_results' in start_vars.keys():
+        if 'bootstrap_results' in list(start_vars.keys()):
             self.bootResult = start_vars['bootstrap_results']
         else:
             self.bootResult = []
 
-        if 'do_control' in start_vars.keys():
+        if 'do_control' in list(start_vars.keys()):
             self.doControl = start_vars['do_control']
         else:
             self.doControl = "false"
-        if 'control_marker' in start_vars.keys():
+        if 'control_marker' in list(start_vars.keys()):
             self.controlLocus = start_vars['control_marker']
         else:
             self.controlLocus = ""
-        if 'covariates' in start_vars.keys():
+        if 'covariates' in list(start_vars.keys()):
             self.covariates = start_vars['covariates']
-        if 'maf' in start_vars.keys():
+        if 'maf' in list(start_vars.keys()):
             self.maf = start_vars['maf']
-        if 'use_loco' in start_vars.keys():
+        if 'use_loco' in list(start_vars.keys()):
             self.use_loco = start_vars['use_loco']
 
         #try:
@@ -296,7 +297,7 @@ class MarkerRegression(object):
 
 ## BEGIN HaplotypeAnalyst
         #self.haplotypeAnalystChecked = fd.formdata.getvalue('haplotypeAnalystCheck')
-        if 'haplotypeAnalystCheck' in start_vars.keys():
+        if 'haplotypeAnalystCheck' in list(start_vars.keys()):
             self.haplotypeAnalystChecked = start_vars['haplotypeAnalystCheck']
         else:
             self.haplotypeAnalystChecked = False
@@ -304,26 +305,26 @@ class MarkerRegression(object):
 
         self.graphHeight = self.GRAPH_DEFAULT_HEIGHT
         self.dominanceChecked = False
-        if 'LRSCheck' in start_vars.keys():
+        if 'LRSCheck' in list(start_vars.keys()):
             self.LRS_LOD = start_vars['LRSCheck']
         else:
             self.LRS_LOD = start_vars['score_type']
         self.cutoff = start_vars['cutoff']
         self.intervalAnalystChecked = True
         self.draw2X = False
-        if 'additiveCheck' in start_vars.keys():
+        if 'additiveCheck' in list(start_vars.keys()):
             self.additiveChecked = start_vars['additiveCheck']
         else:
             self.additiveChecked = False
-        if 'viewLegend' in start_vars.keys():
+        if 'viewLegend' in list(start_vars.keys()):
             self.legendChecked = start_vars['viewLegend']
         else:
             self.legendChecked = False
-        if 'showSNP' in start_vars.keys():
+        if 'showSNP' in list(start_vars.keys()):
             self.SNPChecked = start_vars['showSNP']
         else:
             self.SNPChecked = False
-        if 'showGenes' in start_vars.keys():
+        if 'showGenes' in list(start_vars.keys()):
             self.geneChecked = start_vars['showGenes']
         else:
             self.geneChecked = False
@@ -387,9 +388,9 @@ class MarkerRegression(object):
                         Chr_Length.Name in (%s)
                 Order by
                         Chr_Length.OrderId
-                """ % (self.dataset.group.name, string.join(map(lambda X: "'%s'" % X[0], self.ChrList[1:]), ", ")))
+                """ % (self.dataset.group.name, string.join(["'%s'" % X[0] for X in self.ChrList[1:]], ", ")))
 
-        self.ChrLengthMbList = map(lambda x: x[0]/1000000.0, self.ChrLengthMbList)
+        self.ChrLengthMbList = [x[0]/1000000.0 for x in self.ChrLengthMbList]
         self.ChrLengthMbSum = reduce(lambda x, y:x+y, self.ChrLengthMbList, 0.0)
         if self.ChrLengthMbList:
             self.MbGraphInterval = self.ChrLengthMbSum/(len(self.ChrLengthMbList)*12) #Empirical Mb interval
@@ -612,7 +613,7 @@ class MarkerRegression(object):
             showLocusForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype='multipart/form-data',
                 name=showLocusForm, submit=HT.Input(type='hidden'))
             hddn = {'FormID':'showDatabase', 'ProbeSetID':'_','database':fd.RISet+"Geno",'CellID':'_', 'RISet':fd.RISet, 'incparentsf1':'ON'}
-            for key in hddn.keys():
+            for key in list(hddn.keys()):
                 showLocusForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
             showLocusForm.append(intImg)
         else:
@@ -648,7 +649,7 @@ class MarkerRegression(object):
             if self.diffCol:
                 hddn['s1'] = self.diffCol[0]
                 hddn['s2'] = self.diffCol[1]
-            for key in hddn.keys():
+            for key in list(hddn.keys()):
                 iaForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
             iaForm.append(HT.Paragraph("Interval Analyst : Chr %s from %2.6f to %2.6f Mb" % (self.genotype[0].name, self.startMb, self.endMb),
                 HT.Input(name='customize', value='Customize', onClick= "formInNewWindow(this.form);", type='button', Class="button"), Class="subtitle"))
@@ -1246,8 +1247,8 @@ class MarkerRegression(object):
                 tenPercentLength = geneLength*0.0001
                 SNPdensity = theGO["snpCount"]/geneLength
 
-                exonStarts = map(float, theGO['exonStarts'].split(",")[:-1])
-                exonEnds = map(float, theGO['exonEnds'].split(",")[:-1])
+                exonStarts = list(map(float, theGO['exonStarts'].split(",")[:-1]))
+                exonEnds = list(map(float, theGO['exonEnds'].split(",")[:-1]))
                 cdsStart = theGO['cdsStart']
                 cdsEnd = theGO['cdsEnd']
                 accession = theGO['NM_ID']
@@ -2051,7 +2052,7 @@ class MarkerRegression(object):
             lrsEdgeWidth = 1
         else:
             if self.additiveChecked:
-                additiveMax = max(map(lambda X : abs(X['additive']), self.qtlresults))
+                additiveMax = max([abs(X['additive']) for X in self.qtlresults])
             #if INTERCROSS:
             #    dominanceMax = max(map(lambda X : abs(X.dominance), self.qtlresults[0]))
             #else:
@@ -2423,7 +2424,7 @@ class MarkerRegression(object):
             if not self.controlLocus and self.selectedChr > -1:
                 self.genotype.chromosome = [self.genotype[self.selectedChr]]
             elif self.selectedChr > -1: #self.controlLocus and self.selectedChr > -1
-                lociPerChr = map(len, self.genotype)
+                lociPerChr = list(map(len, self.genotype))
                 resultSlice = reduce(lambda X, Y: X+Y, lociPerChr[:self.selectedChr], 0)
                 resultSlice = [resultSlice,resultSlice+lociPerChr[self.selectedChr]]
             else:
@@ -2589,7 +2590,7 @@ class MarkerRegression(object):
 ## BEGIN HaplotypeAnalyst #### haplotypeAnalystCheck added below
 ## END HaplotypeAnalyst
 
-        for key in fd.formdata.keys():
+        for key in list(fd.formdata.keys()):
             if key == "searchResult" and type([]) == type(fd.formdata.getvalue(key)):
                 controlsForm.append(HT.Input(name=key, value=string.join(fd.formdata.getvalue(key), "\t"), type="hidden"))
             elif key not in ("endMb",  "startMb",  "chromosomes", "scale", "permCheck", "bootCheck",  "additiveCheck", "dominanceCheck",
@@ -2837,7 +2838,7 @@ class MarkerRegression(object):
             # http://lily.uthsc.edu:8080/20090422_UTHSC_cuiyan/PolymiRTS_CLS?chrom=2&chrom_from=115&chrom_to=125
             #XZ: We can NOT assume their web service is always on. We must put this block of code in try except.
             try:
-                conn = httplib.HTTPConnection("lily.uthsc.edu:8080")
+                conn = http.client.HTTPConnection("lily.uthsc.edu:8080")
                 conn.request("GET", "/20090422_UTHSC_cuiyan/PolymiRTS_CLS?chrom=%s&chrom_from=%s&chrom_to=%s" % (self.genotype[0].name, self.startMb, self.endMb))
                 response = conn.getresponse()
                 data = response.read()
@@ -2923,7 +2924,7 @@ class MarkerRegression(object):
 
                     # polymiRTS
                     polymiRTS = ' '
-                    if dic.has_key(theGO["GeneID"]):
+                    if theGO["GeneID"] in dic:
                         polymiRTS = dic[theGO["GeneID"]]
 
                     # If we have a referenceGene then we will show the Literature Correlation

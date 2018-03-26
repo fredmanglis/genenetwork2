@@ -24,7 +24,7 @@
 #
 # Last updated by GeneNetwork Core Team 2010/10/20
 
-import cPickle
+import pickle
 import os
 import MySQLdb
 import time
@@ -33,9 +33,9 @@ import pyXLWriter as xl
 from htmlgen import HTMLgen2 as HT
 
 from base import webqtlConfig
-from THCell import THCell
-from TDCell import TDCell
-import webqtlUtil
+from .THCell import THCell
+from .TDCell import TDCell
+from . import webqtlUtil
 
 
 class AJAX_table:
@@ -51,7 +51,7 @@ class AJAX_table:
 
         try:
             fp = open(os.path.join(webqtlConfig.TMPDIR, file + '.obj'), 'rb')
-            tblobj = cPickle.load(fp)
+            tblobj = pickle.load(fp)
             fp.close()
 
             if cmd == 'addCorr':
@@ -104,7 +104,7 @@ class AJAX_table:
                         vdict[item[0]] = item[1]
                     newvals = []
                     for id in ids:
-                        if vdict.has_key(id):
+                        if id in vdict:
                             newvals.append(vdict[id])
                         else:
                             newvals.append(None)
@@ -138,7 +138,7 @@ class AJAX_table:
                 workbook.close()
 
                 objfile = open(os.path.join(webqtlConfig.TMPDIR, file + '.obj'), 'wb')
-                cPickle.dump(tblobj, objfile)
+                pickle.dump(tblobj, objfile)
                 objfile.close()
             else:
                 pass

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 #import string
 from math import *
@@ -8,7 +8,7 @@ import traceback
 
 from pprint import pformat as pf
 
-from corestats import Stats
+from .corestats import Stats
 
 import reaper
 from htmlgen import HTMLgen2 as HT
@@ -103,7 +103,7 @@ def plotNormalProbability(vals=None, RISet='', title=None, showstrains=0, specia
     dataXZ = vals[:]
     dataXZ.sort(webqtlUtil.cmpOrder)
     dataLabel = []
-    dataX = map(lambda X: X[1], dataXZ)
+    dataX = [X[1] for X in dataXZ]
 
     showLabel = showstrains
     if len(dataXZ) > 50:
@@ -113,7 +113,7 @@ def plotNormalProbability(vals=None, RISet='', title=None, showstrains=0, specia
         dataLabel.append(strainName)
 
     dataY=Plot.U(len(dataX))
-    dataZ=map(Plot.inverseCumul,dataY)
+    dataZ=list(map(Plot.inverseCumul,dataY))
     c = pid.PILCanvas(size=(750,500))
     Plot.plotXY(c, dataZ, dataX, dataLabel = dataLabel, XLabel='Expected Z score', connectdot=0, YLabel='Trait value', title=title, specialCases=specialStrains, showLabel = showLabel)
 

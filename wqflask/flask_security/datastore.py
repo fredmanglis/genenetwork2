@@ -65,9 +65,9 @@ class UserDatastore(object):
         self.role_model = role_model
 
     def _prepare_role_modify_args(self, user, role):
-        if isinstance(user, basestring):
+        if isinstance(user, str):
             user = self.find_user(email=user)
-        if isinstance(role, basestring):
+        if isinstance(role, str):
             role = self.find_role(role)
         return user, role
 
@@ -157,7 +157,7 @@ class UserDatastore(object):
         """Creates and returns a new user from the given parameters."""
 
         user = self.user_model(**self._prepare_create_user_args(**kwargs))
-        print "in abstraced create_user, user is:", user
+        print("in abstraced create_user, user is:", user)
         return self.put(user)
 
     def delete_user(self, user):

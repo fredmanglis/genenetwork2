@@ -7,9 +7,9 @@
 # from flask import Flask
 # application = Flask(__name__)
 
-print "Starting up Gunicorn process"
+print("Starting up Gunicorn process")
 
-from wqflask import app
+from .wqflask import app
 
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super secret key'

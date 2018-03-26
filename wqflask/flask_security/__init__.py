@@ -22,4 +22,4 @@ from .signals import confirm_instructions_sent, password_reset, \
      reset_password_instructions_sent, user_confirmed, user_registered
 from .utils import login_user, logout_user, url_for_security
 
-print "Using our own flask.ext.security"
+print("Using our own flask.ext.security")

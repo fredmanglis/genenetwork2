@@ -18,14 +18,14 @@
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
 
-from __future__ import absolute_import, print_function, division
+
 
 import sys
 # sys.path.append(".")   Never do this in a webserver!
 
 import gc
 import string
-import cPickle
+import pickle
 import os
 import time
 import pp
@@ -212,8 +212,8 @@ class NetworkGraph(object):
             
         self.js_data = dict(traits = [trait.name for trait in self.traits],
                             groups = groups,
-                            cols = range(len(self.traits)),
-                            rows = range(len(self.traits)),
+                            cols = list(range(len(self.traits))),
+                            rows = list(range(len(self.traits))),
                             samples = self.all_sample_list,
                             sample_data = self.sample_data,
                             elements = self.elements,)

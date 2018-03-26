@@ -18,14 +18,14 @@
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
 
-from __future__ import absolute_import, print_function, division
+
 
 import sys
 # sys.path.append(".") Never in a running webserver
 
 import gc
 import string
-import cPickle
+import pickle
 import os
 import time
 import pp
@@ -59,6 +59,7 @@ from pprint import pformat as pf
 from flask import Flask, g
 
 import utility.logger
+from functools import reduce
 logger = utility.logger.getLogger(__name__ )
 
 METHOD_SAMPLE_PEARSON = "1"
@@ -202,11 +203,11 @@ class CorrelationResults(object):
                 if corr_samples_group == 'samples_other':
                     primary_samples = [x for x in primary_samples if x not in (
                                     self.dataset.group.parlist + self.dataset.group.f1list)]
-                self.process_samples(start_vars, self.this_trait.data.keys(), primary_samples)
+                self.process_samples(start_vars, list(self.this_trait.data.keys()), primary_samples)
 
             self.target_dataset = data_set.create_dataset(start_vars['corr_dataset'])
             # print("self.sample_data.keys: %s" % self.sample_data.keys)
-            self.target_dataset.get_trait_data(self.sample_data.keys())
+            self.target_dataset.get_trait_data(list(self.sample_data.keys()))
 
             self.correlation_results = []
 
@@ -220,17 +221,17 @@ class CorrelationResults(object):
 
                 tissue_corr_data = self.do_tissue_correlation_for_all_traits()
                 if tissue_corr_data != None:
-                    for trait in tissue_corr_data.keys()[:self.return_number]:
+                    for trait in list(tissue_corr_data.keys())[:self.return_number]:
                         self.get_sample_r_and_p_values(trait, self.target_dataset.trait_data[trait])
                 else:
-                    for trait, values in self.target_dataset.trait_data.iteritems():
+                    for trait, values in self.target_dataset.trait_data.items():
                         self.get_sample_r_and_p_values(trait, values)
 
             elif self.corr_type == "lit":
                 self.trait_geneid_dict = self.dataset.retrieve_genes("GeneId")
                 lit_corr_data = self.do_lit_correlation_for_all_traits()
 
-                for trait in lit_corr_data.keys()[:self.return_number]:
+                for trait in list(lit_corr_data.keys())[:self.return_number]:
                     self.get_sample_r_and_p_values(trait, self.target_dataset.trait_data[trait])
 
             elif self.corr_type == "sample":
@@ -251,27 +252,27 @@ class CorrelationResults(object):
 
                     self.do_parallel_correlation(db_filename, num_overlap)
                 else:
-                    for trait, values in self.target_dataset.trait_data.iteritems():
+                    for trait, values in self.target_dataset.trait_data.items():
                         self.get_sample_r_and_p_values(trait, values)
 
-                self.correlation_data = collections.OrderedDict(sorted(self.correlation_data.items(),
+                self.correlation_data = collections.OrderedDict(sorted(list(self.correlation_data.items()),
                                                                        key=lambda t: -abs(t[1][0])))
 
 
             if self.target_dataset.type == "ProbeSet" or self.target_dataset.type == "Geno":
                 #ZS: Convert min/max chromosome to an int for the location range option
                 range_chr_as_int = None
-                for order_id, chr_info in self.dataset.species.chromosomes.chromosomes.iteritems():
+                for order_id, chr_info in self.dataset.species.chromosomes.chromosomes.items():
                     if chr_info.name == self.location_chr:
                         range_chr_as_int = order_id
 
-            for _trait_counter, trait in enumerate(self.correlation_data.keys()[:self.return_number]):
+            for _trait_counter, trait in enumerate(list(self.correlation_data.keys())[:self.return_number]):
                 trait_object = GeneralTrait(dataset=self.target_dataset, name=trait, get_qtl_info=True, get_sample_info=False)
 
                 if self.target_dataset.type == "ProbeSet" or self.target_dataset.type == "Geno":
                     #ZS: Convert trait chromosome to an int for the location range option
                     chr_as_int = 0
-                    for order_id, chr_info in self.dataset.species.chromosomes.chromosomes.iteritems():
+                    for order_id, chr_info in self.dataset.species.chromosomes.chromosomes.items():
                         if chr_info.name == trait_object.chr:
                             chr_as_int = order_id
 
@@ -455,14 +456,14 @@ class CorrelationResults(object):
 
             #print("trait_gene_symbols: ", pf(trait_gene_symbols.values()))
             corr_result_tissue_vals_dict= correlation_functions.get_trait_symbol_and_tissue_values(
-                                                    symbol_list=self.trait_symbol_dict.values())
+                                                    symbol_list=list(self.trait_symbol_dict.values()))
 
             #print("corr_result_tissue_vals: ", pf(corr_result_tissue_vals_dict))
 
             #print("trait_gene_symbols: ", pf(trait_gene_symbols))
 
             tissue_corr_data = {}
-            for trait, symbol in self.trait_symbol_dict.iteritems():
+            for trait, symbol in self.trait_symbol_dict.items():
                 if symbol and symbol.lower() in corr_result_tissue_vals_dict:
                     this_trait_tissue_values = corr_result_tissue_vals_dict[symbol.lower()]
                     #print("this_trait_tissue_values: ", pf(this_trait_tissue_values))
@@ -473,7 +474,7 @@ class CorrelationResults(object):
 
                     tissue_corr_data[trait] = [symbol, result[0], result[2]]
 
-            tissue_corr_data = collections.OrderedDict(sorted(tissue_corr_data.items(),
+            tissue_corr_data = collections.OrderedDict(sorted(list(tissue_corr_data.items()),
                                                            key=lambda t: -abs(t[1][1])))
 
             return tissue_corr_data
@@ -519,7 +520,7 @@ class CorrelationResults(object):
         input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), self.this_trait.geneid)
 
         lit_corr_data = {}
-        for trait, gene_id in self.trait_geneid_dict.iteritems():
+        for trait, gene_id in self.trait_geneid_dict.items():
             mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), gene_id)
 
             if mouse_gene_id and str(mouse_gene_id).find(";") == -1:
@@ -547,7 +548,7 @@ class CorrelationResults(object):
             else:
                 lit_corr_data[trait] = [gene_id, 0]
 
-        lit_corr_data = collections.OrderedDict(sorted(lit_corr_data.items(),
+        lit_corr_data = collections.OrderedDict(sorted(list(lit_corr_data.items()),
                                                            key=lambda t: -abs(t[1][1])))
 
         return lit_corr_data
@@ -789,7 +790,7 @@ class CorrelationResults(object):
         symbol_corr_dict, symbol_pvalue_dict = self.calculate_corr_for_all_tissues(
                                                                 tissue_dataset_id=TISSUE_MOUSE_DB)
 
-        symbol_corr_list = symbol_corr_dict.items()
+        symbol_corr_list = list(symbol_corr_dict.items())
 
         symbol_corr_list.sort(cmp_tisscorr_absolute_value)
         symbol_corr_list = symbol_corr_list[0 : 2*return_number]
@@ -817,7 +818,7 @@ class CorrelationResults(object):
         primary_trait_symbol_value_dict = correlation_functions.make_gene_tissue_value_dict(
                                                     GeneNameLst=[self.this_trait.symbol],
                                                     TissueProbeSetFreezeId=tissue_dataset_id)
-        primary_trait_value = primary_trait_symbol_value_dict.values()[0]
+        primary_trait_value = list(primary_trait_symbol_value_dict.values())[0]
 
         symbol_value_dict = correlation_functions.make_gene_tissue_value_dict(
                                         gene_name_list=[],
@@ -1140,7 +1141,7 @@ class CorrelationResults(object):
         primary_trait_symbol_value_dict = correlation_functions.make_gene_tissue_value_dict(
                                                     GeneNameLst=[self.this_trait.symbol],
                                                     TissueProbeSetFreezeId=tissue_dataset_id)
-        primary_trait_value = primary_trait_symbol_value_dict.values()[0]
+        primary_trait_value = list(primary_trait_symbol_value_dict.values())[0]
 
         symbol_value_dict = correlation_functions.make_gene_tissue_value_dict(
                                         gene_name_list=[],
@@ -1160,12 +1161,12 @@ class CorrelationResults(object):
 
     def correlate(self):
         self.correlation_data = collections.defaultdict(list)
-        for trait, values in self.target_dataset.trait_data.iteritems():
+        for trait, values in self.target_dataset.trait_data.items():
             values_1 = []
             values_2 = []
             for index,sample in enumerate(self.target_dataset.samplelist):
                 target_value = values[index]
-                if sample in self.sample_data.keys():
+                if sample in list(self.sample_data.keys()):
                     this_value = self.sample_data[sample]
                     values_1.append(this_value)
                     values_2.append(target_value)

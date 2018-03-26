@@ -18,7 +18,7 @@
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
 
-from __future__ import absolute_import, print_function, division
+
 import os
 import math
 import string
@@ -27,7 +27,7 @@ import codecs
 
 import json
 import gzip
-import cPickle as pickle
+import pickle as pickle
 import itertools
 from operator import itemgetter
 
@@ -193,7 +193,7 @@ class Markers(object):
             #if len(self.markers) > len(p_values):
             #    self.markers = self.markers[:len(p_values)]
 
-            for marker, p_value in itertools.izip(self.markers, p_values):
+            for marker, p_value in zip(self.markers, p_values):
                 if not p_value:
                     continue
                 marker['p_value'] = float(p_value)
@@ -1019,8 +1019,8 @@ class MrnaAssayDataSet(DataSet):
 
             #XZ, 12/08/2008: description
             #XZ, 06/05/2009: Rob asked to add probe target description
-            description_string = unicode(str(this_trait.description).strip(codecs.BOM_UTF8), 'utf-8')
-            target_string = unicode(str(this_trait.probe_target_description).strip(codecs.BOM_UTF8), 'utf-8')
+            description_string = str(str(this_trait.description).strip(codecs.BOM_UTF8), 'utf-8')
+            target_string = str(str(this_trait.probe_target_description).strip(codecs.BOM_UTF8), 'utf-8')
 
             if len(description_string) > 1 and description_string != 'None':
                 description_display = description_string

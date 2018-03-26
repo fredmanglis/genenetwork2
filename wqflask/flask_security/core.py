@@ -206,8 +206,8 @@ def _get_serializer(app, name):
 
 
 def _get_state(app, datastore, **kwargs):
-    for key, value in get_config(app).items():
-        print "in _get_state [{}]: {}".format(key, value)
+    for key, value in list(get_config(app).items()):
+        print("in _get_state [{}]: {}".format(key, value))
         kwargs[key.lower()] = value
 
     kwargs.update(dict(
@@ -224,7 +224,7 @@ def _get_state(app, datastore, **kwargs):
         _send_mail_task=None
     ))
 
-    for key, value in _default_forms.items():
+    for key, value in list(_default_forms.items()):
         if key not in kwargs or not kwargs[key]:
             kwargs[key] = value
 
@@ -280,7 +280,7 @@ class AnonymousUser(AnonymousUserBase):
 class _SecurityState(object):
 
     def __init__(self, **kwargs):
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             setattr(self, key.lower(), value)
 
     def _add_ctx_processor(self, endpoint, fn):
@@ -352,10 +352,10 @@ class Security(object):
         """
         datastore = datastore or self.datastore
 
-        for key, value in _default_config.items():
+        for key, value in list(_default_config.items()):
             app.config.setdefault('SECURITY_' + key, value)
 
-        for key, value in _default_messages.items():
+        for key, value in list(_default_messages.items()):
             app.config.setdefault('SECURITY_MSG_' + key, value)
 
         identity_loaded.connect_via(app)(_on_identity_loaded)

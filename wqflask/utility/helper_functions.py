@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, division
+
 
 from base.trait import GeneralTrait
 from base import data_set
@@ -30,7 +30,7 @@ def get_species_dataset_trait(self, start_vars):
 
 
 def get_trait_db_obs(self, trait_db_list):
-    if isinstance(trait_db_list, basestring):
+    if isinstance(trait_db_list, str):
         trait_db_list = trait_db_list.split(",")
 
     self.trait_list = []

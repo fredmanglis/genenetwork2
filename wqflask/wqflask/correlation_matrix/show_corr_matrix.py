@@ -18,14 +18,14 @@
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
 
-from __future__ import absolute_import, print_function, division
+
 
 import sys
 # sys.path.append(".")   Never do this in a webserver!
 
 import gc
 import string
-import cPickle
+import pickle
 import os
 import time
 import pp
@@ -61,6 +61,7 @@ from MySQLdb import escape_string as escape
 from pprint import pformat as pf
 
 from flask import Flask, g
+from functools import reduce
 
 
 class CorrelationMatrix(object):
@@ -173,14 +174,14 @@ class CorrelationMatrix(object):
             for sample in self.all_sample_list:
                 groups.append(1)
 
-            pca = self.calculate_pca(range(len(self.traits)), corr_eigen_value, corr_eigen_vectors)
+            pca = self.calculate_pca(list(range(len(self.traits))), corr_eigen_value, corr_eigen_vectors)
 
             self.loadings_array = self.process_loadings()
 
             self.js_data = dict(traits = [trait.name for trait in self.traits],
                                 groups = groups,
-                                cols = range(len(self.traits)),
-                                rows = range(len(self.traits)),
+                                cols = list(range(len(self.traits))),
+                                rows = list(range(len(self.traits))),
                                 samples = self.all_sample_list,
                                 sample_data = self.sample_data,)
             #                    corr_results = [result[1] for result in result_row for result_row in self.corr_results])
@@ -257,7 +258,7 @@ def zScore(trait_data_array):
             stdev = math.sqrt(var/(N-1))
             if stdev == 0:
                 stdev = 1e-100
-            data2 = map(lambda x:(x-mean)/stdev,data)
+            data2 = [(x-mean)/stdev for x in data]
             trait_data_array[i] = data2
             i += 1
         return trait_data_array
@@ -278,7 +279,7 @@ def sortEigenVectors(vector):
             A.append(item[0])
             B.append(item[1])
         sum = reduce(lambda x,y: x+y, A, 0.0)
-        A = map(lambda x:x*100.0/sum, A) 
+        A = [x*100.0/sum for x in A] 
         return [A,B]
     except:
         return []

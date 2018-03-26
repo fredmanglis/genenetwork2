@@ -33,6 +33,7 @@ from math import *
 from htmlgen import HTMLgen2 as HT
 
 from base import webqtlConfig
+from functools import reduce
 
 
 
@@ -166,7 +167,7 @@ def decodeEscape(str):
     return a
 
 def exportData(hddn, tdata, NP = None):
-    for key in tdata.keys():
+    for key in list(tdata.keys()):
         _val, _var, _N = tdata[key].val, tdata[key].var, tdata[key].N
         if _val != None:
             hddn[key] = _val
@@ -224,7 +225,7 @@ def transpose(m):
 
 def asymTranspose(m):
     'transpose a matrix'
-    t = max(map(len, m))
+    t = max(list(map(len, m)))
     n = len(m)
     m2 = [["-"]]*n
     for i in range(n):
@@ -244,19 +245,19 @@ def generate_session():
 
 def cvt2Dict(x):
     tmp = {}
-    for key in x.keys():
+    for key in list(x.keys()):
         tmp[key] = x[key]
     return tmp
 
 def dump_session(session_obj, filename):
     "It seems mod python can only cPickle most basic data type"
-    import cPickle
+    import pickle
     session_file = open(filename, 'wb')
     #try:
     #       pass
     #except:
     #       pass
-    cPickle.dump(session_obj, session_file)
+    pickle.dump(session_obj, session_file)
     session_file.close()
 
 def StringAsFloat(str):
@@ -886,7 +887,7 @@ def hasAccessToConfidentialPhenotypeTrait(privilege, userName, authorized_users)
     if webqtlConfig.USERDICT[privilege] > webqtlConfig.USERDICT['user']:
         access_to_confidential_phenotype_trait = 1
     else:
-        AuthorizedUsersList=map(string.strip, string.split(authorized_users, ','))
+        AuthorizedUsersList=list(map(string.strip, string.split(authorized_users, ',')))
         if AuthorizedUsersList.__contains__(userName):
             access_to_confidential_phenotype_trait = 1
     return access_to_confidential_phenotype_trait

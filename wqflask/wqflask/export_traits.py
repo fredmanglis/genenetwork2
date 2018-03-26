@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+
 
 import operator
 import csv
 import xlsxwriter
-import StringIO 
+import io 
 import datetime
 
 import simplejson as json
@@ -16,7 +16,7 @@ def export_search_results_csv(targs):
     table_headers = table_data['headers']
     table_rows = table_data['rows']
     
-    buff = StringIO.StringIO()
+    buff = io.StringIO()
     writer = csv.writer(buff)
     
     metadata = []

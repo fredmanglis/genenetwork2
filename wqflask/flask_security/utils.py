@@ -167,7 +167,7 @@ def get_config(app):
 
     :param app: The application to inspect
     """
-    items = app.config.items()
+    items = list(app.config.items())
     prefix = 'SECURITY_'
 
     def strip_prefix(tup):
@@ -354,19 +354,19 @@ class CaptureSignals(object):
         self._records[signal].append((args, kwargs))
 
     def __enter__(self):
-        for signal, receiver in self._receivers.iteritems():
+        for signal, receiver in self._receivers.items():
             signal.connect(receiver)
         return self
 
     def __exit__(self, type, value, traceback):
-        for signal, receiver in self._receivers.iteritems():
+        for signal, receiver in self._receivers.items():
             signal.disconnect(receiver)
 
     def signals_sent(self):
         """Return a set of the signals sent.
         :rtype: list of blinker `NamedSignals`.
         """
-        return set([signal for signal, _ in self._records.iteritems() if self._records[signal]])
+        return set([signal for signal, _ in self._records.items() if self._records[signal]])
 
 
 def capture_signals():
