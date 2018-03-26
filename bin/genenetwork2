@@ -115,7 +115,7 @@ if [ -z $GN2_PROFILE ]; then
     read -p "PRESS [ENTER] TO CONTINUE..."
 else
     export PATH=$GN2_PROFILE/bin:$PATH
-    export PYTHONPATH="$GN2_PROFILE/lib/python2.7/site-packages${PYTHONPATH:+:}$PYTHONPATH"
+    export PYTHONPATH="$GN2_PROFILE/lib/python3.5/site-packages${PYTHONPATH:+:}$PYTHONPATH"
     export R_LIBS_SITE=$GN2_PROFILE/site-library
     export GEM_PATH=$GN2_PROFILE/lib/ruby/gems/2.4.0
     export JS_GUIX_PATH=$GN2_PROFILE/share/genenetwork2/javascript
