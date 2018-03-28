@@ -1,7 +1,5 @@
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
 from flask import g
 
 class News(object):
