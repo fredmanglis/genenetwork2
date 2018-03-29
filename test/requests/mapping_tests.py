@@ -8,7 +8,7 @@ from lxml.html import fromstring
 def load_data_from_file():
     filename = "../test/data/input/mapping/1435395_s_at_HC_M2_0606_P.json"
     file_handle = open(filename, "r")
-    file_data = json.loads(file_handle.read().encode("utf-8"))
+    file_data = json.loads(file_handle.read())
     return file_data
 
 def check_pylmm_tool_selection(host, data):
