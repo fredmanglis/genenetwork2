@@ -95,8 +95,11 @@ __version__="1.0"
 # Anyway the text based approach is about 60 times faster than using the full dom implementation.
 use_dom_implementation=0
 
+try:
+    from exceptions import ImportError
+except:
+    pass
 
-import exceptions
 if use_dom_implementation!=0:
     try:
         from xml.dom import implementation
@@ -107,11 +110,7 @@ if use_dom_implementation!=0:
 #The prettyprint module is used for converting the xml document object to a xml file
 
 import sys
-assert sys.version_info[0]>=2
-if sys.version_info[1]<2:
-    True=1
-    False=0
-    file=open
+assert sys.version_info[0]>=3
 
 sys.setrecursionlimit=50
 #The recursion limit is set conservative so mistakes like s=svg() s.addElement(s)
