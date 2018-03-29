@@ -451,10 +451,10 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                         Publication.Id = PublishXRef.PublicationId AND
                         PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND
                         PublishFreeze.Id = %s
-                """ % (trait.name, dataset.id)
+                """
 
         logger.sql(query)
-        trait_info = g.db.execute(query).fetchone()
+        trait_info = g.db.execute(query, (trait.name, dataset.id)).fetchone()
 
 
     #XZ, 05/08/2009: Xiaodong add this block to use ProbeSet.Id to find the probeset instead of just using ProbeSet.Name
@@ -463,42 +463,37 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
         display_fields_string = ', ProbeSet.'.join(dataset.display_fields)
         display_fields_string = 'ProbeSet.' + display_fields_string
         query = """
-                SELECT %s
+                SELECT {}
                 FROM ProbeSet, ProbeSetFreeze, ProbeSetXRef
                 WHERE
                         ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id AND
                         ProbeSetXRef.ProbeSetId = ProbeSet.Id AND
-                        ProbeSetFreeze.Name = '%s' AND
-                        ProbeSet.Name = '%s'
-                """ % (escape(display_fields_string),
-                       escape(dataset.name),
-                       escape(str(trait.name)))
+                        ProbeSetFreeze.Name = %s AND
+                        ProbeSet.Name = %s
+                """.format(display_fields_string)
         logger.sql(query)
-        trait_info = g.db.execute(query).fetchone()
+        trait_info = g.db.execute(query, (dataset.name, str(trait.name))).fetchone()
     #XZ, 05/08/2009: We also should use Geno.Id to find marker instead of just using Geno.Name
     # to avoid the problem of same marker name from different species.
     elif dataset.type == 'Geno':
         display_fields_string = string.join(dataset.display_fields,',Geno.')
         display_fields_string = 'Geno.' + display_fields_string
         query = """
-                SELECT %s
+                SELECT {}
                 FROM Geno, GenoFreeze, GenoXRef
                 WHERE
                         GenoXRef.GenoFreezeId = GenoFreeze.Id AND
                         GenoXRef.GenoId = Geno.Id AND
                         GenoFreeze.Name = '%s' AND
                         Geno.Name = '%s'
-                """ % (escape(display_fields_string),
-                       escape(dataset.name),
-                       escape(trait.name))
+                """.format(display_fields_string)
         logger.sql(query)
-        trait_info = g.db.execute(query).fetchone()
+        trait_info = g.db.execute(query, (dataset.name, trait.name)).fetchone()
     else: #Temp type
-        query = """SELECT %s FROM %s WHERE Name = %s"""
+        query = """SELECT {} FROM {} WHERE Name = %s""".format(
+            string.join(dataset.display_fields,','), dataset.type)
         logger.sql(query)
-        trait_info = g.db.execute(query,
-                                  (string.join(dataset.display_fields,','),
-                                               dataset.type, trait.name)).fetchone()
+        trait_info = g.db.execute(query, (trait.name)).fetchone()
     if trait_info:
         trait.haveinfo = True
 
@@ -506,7 +501,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
         for i, field in enumerate(dataset.display_fields):
             holder = trait_info[i]
             if isinstance(trait_info[i], str):
-                holder = str(trait_info[i], "utf-8", "ignore")
+                holder = trait_info[i]
             setattr(trait, field, holder)
 
         if dataset.type == 'Publish':
@@ -561,21 +556,21 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                         FROM
                                 Homologene, Species, InbredSet
                         WHERE
-                                Homologene.GeneId ='%s' AND
-                                InbredSet.Name = '%s' AND
+                                Homologene.GeneId = %s AND
+                                InbredSet.Name = %s AND
                                 InbredSet.SpeciesId = Species.Id AND
                                 Species.TaxonomyId = Homologene.TaxonomyId
-                        """ % (escape(str(trait.geneid)), escape(dataset.group.name))
+                        """
                 logger.sql(query)
-                result = g.db.execute(query).fetchone()
+                result = g.db.execute(query, (str(trait.geneid), dataset.group.name)).fetchone()
                 #else:
                 #    result = None
 
                 if result:
                     trait.homologeneid = result[0]
 
-            description_string = str(str(trait.description).strip(codecs.BOM_UTF8), 'utf-8')
-            target_string = str(str(trait.probe_target_description).strip(codecs.BOM_UTF8), 'utf-8')
+            description_string = trait.description.strip(str(codecs.BOM_UTF8))
+            target_string = trait.probe_target_description.strip(str(codecs.BOM_UTF8))
 
             if len(description_string) > 1 and description_string != 'None':
                 description_display = description_string

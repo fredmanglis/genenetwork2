@@ -13,7 +13,7 @@ logger = getLogger(__name__ )
 
 # from inspect import stack
 
-def fetch1(query, path=None, func=None):
+def fetch1(query, data=None, path=None, func=None):
     """Fetch one result as a Tuple using either a SQL query or the URI
 path to GN_SERVER (when USE_GN_SERVER is True). Apply func to
 GN_SERVER result when set (which should return a Tuple)
@@ -30,16 +30,16 @@ GN_SERVER result when set (which should return a Tuple)
         logger.debug(path,res2)
         return res2
     else:
-        return fetchone(query)
+        return fetchone(query, data)
 
-def fetchone(query):
+def fetchone(query, data):
     """Return tuple containing one row by calling SQL directly (the
 original fetchone, but with logging)
 
     """
     with Bench("SQL",LOG_SQL):
         def helper(query):
-            res = g.db.execute(query)
+            res = g.db.execute(query, data)
             return res.fetchone()
         return logger.sql(query, helper)
 

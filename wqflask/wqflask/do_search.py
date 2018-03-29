@@ -55,7 +55,7 @@ class DoSearch(object):
 
     def mescape(self, *items):
         """Multiple escape"""
-        escaped = [escape(str(item)) for item in items]
+        escaped = [escape(str(item)).decode("utf-8") for item in items]
         logger.debug("escaped is:", escaped)
         return tuple(escaped)
 
@@ -155,7 +155,7 @@ class MrnaAssaySearch(DoSearch):
         where_clause = (match_clause +
             """ProbeSet.Id = ProbeSetXRef.ProbeSetId
                and ProbeSetXRef.ProbeSetFreezeId = %s
-                        """ % (escape(str(self.dataset.id))))
+                        """ % (escape(str(self.dataset.id)).decode("utf-8")))
 
         return where_clause
 
@@ -170,9 +170,9 @@ class MrnaAssaySearch(DoSearch):
                     and ProbeSet.Id = ProbeSetXRef.ProbeSetId
                     and ProbeSetXRef.ProbeSetFreezeId = %s
                 ORDER BY ProbeSet.symbol ASC
-                            """ % (escape(from_clause),
+                            """ % (escape(from_clause).decode("utf-8"),
                                     where_clause,
-                                    escape(str(self.dataset.id))))
+                                    escape(str(self.dataset.id)).decode("utf-8")))
         return query
 
     def run_combined(self, from_clause = '', where_clause = ''):
@@ -191,7 +191,7 @@ class MrnaAssaySearch(DoSearch):
                 ORDER BY ProbeSet.symbol ASC
                             """ % (escape(from_clause),
                                     where_clause,
-                                    escape(str(self.dataset.id))))
+                                    escape(str(self.dataset.id)).decode("utf-8")))
 
         return self.execute(query)
 

@@ -268,9 +268,11 @@ class DatasetGroup(object):
         """This sets self.group and self.group_id"""
         #logger.debug("DATASET NAME2:", dataset.name)
         if name == None:
-            self.name, self.id, self.genetic_type = fetchone(dataset.query_for_group)
+            self.name, self.id, self.genetic_type = fetchone(
+                dataset.query_for_group
+                , (dataset.name, ))
         else:
-            self.name, self.id, self.genetic_type = fetchone("SELECT InbredSet.Name, InbredSet.Id, InbredSet.GeneticType FROM InbredSet where Name='%s'" % name)
+            self.name, self.id, self.genetic_type = fetchone("SELECT InbredSet.Name, InbredSet.Id, InbredSet.GeneticType FROM InbredSet where Name=%s", (name, ))
         if self.name == 'BXD300':
             self.name = "BXD"
 
@@ -304,7 +306,7 @@ class DatasetGroup(object):
 
     def get_mapping_methods(self):
 
-        mapping_id = g.db.execute("select MappingMethodId from InbredSet where Name= '%s'" % self.name).fetchone()[0]
+        mapping_id = g.db.execute("select MappingMethodId from InbredSet where Name='%s'" % (self.name, )).fetchone()[0]
         if mapping_id == "1":
             mapping_names = ["QTLReaper", "PYLMM", "R/qtl"]
         elif mapping_id == "2":
@@ -360,7 +362,7 @@ class DatasetGroup(object):
         if result is not None:
             #logger.debug("Sample List Cache hit!!!")
             #logger.debug("Before unjsonifying {}: {}".format(type(result), result))
-            self.samplelist = json.loads(result)
+            self.samplelist = json.loads(result.decode("utf-8"))
             #logger.debug("  type: ", type(self.samplelist))
             #logger.debug("  self.samplelist: ", self.samplelist)
         else:
@@ -538,7 +540,7 @@ class DataSet(object):
 
         try:
             if self.type == "ProbeSet":
-                query_args = tuple(escape(x) for x in (
+                query_args = tuple(x for x in (
                     str(webqtlConfig.PUBLICTHRESH),
                     self.name,
                     self.name,
@@ -550,8 +552,8 @@ FROM ProbeSetFreeze, ProbeFreeze, Tissue
 WHERE ProbeSetFreeze.public > %s
 AND ProbeSetFreeze.ProbeFreezeId = ProbeFreeze.Id
 AND ProbeFreeze.TissueId = Tissue.Id
-AND (ProbeSetFreeze.Name = '%s' OR ProbeSetFreeze.FullName = '%s' OR ProbeSetFreeze.ShortName = '%s')
-                """ % (query_args),"/dataset/"+self.name+".json",
+AND (ProbeSetFreeze.Name = %s OR ProbeSetFreeze.FullName = %s OR ProbeSetFreeze.ShortName = %s)
+                """, query_args,"/dataset/"+self.name+".json",
             lambda r: (r["id"],r["name"],r["full_name"],r["short_name"],r["data_scale"],r["tissue"])
                 )
             else:
@@ -712,8 +714,8 @@ class PhenotypeDataSet(DataSet):
                                     InbredSet, PublishFreeze
                             WHERE
                                     PublishFreeze.InbredSetId = InbredSet.Id AND
-                                    PublishFreeze.Name = "%s"
-                    ''' % escape(self.name)
+                                    PublishFreeze.Name = %s
+                    '''
 
     def check_confidentiality(self):
         # (Urgently?) Need to write this
@@ -855,8 +857,8 @@ class GenotypeDataSet(DataSet):
                         InbredSet, GenoFreeze
                 WHERE
                         GenoFreeze.InbredSetId = InbredSet.Id AND
-                        GenoFreeze.Name = "%s"
-                ''' % escape(self.name)
+                        GenoFreeze.Name = %s
+                '''
 
     def check_confidentiality(self):
         return geno_mrna_confidentiality(self)
@@ -982,8 +984,8 @@ class MrnaAssayDataSet(DataSet):
                         WHERE
                                 ProbeFreeze.InbredSetId = InbredSet.Id AND
                                 ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId AND
-                                ProbeSetFreeze.Name = "%s"
-                ''' % escape(self.name)
+                                ProbeSetFreeze.Name = %s
+                '''
 
 
     def check_confidentiality(self):
