@@ -6,7 +6,7 @@ import datetime
 import simplejson as json
 
 from flask import request
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 
 from wqflask import app
 
