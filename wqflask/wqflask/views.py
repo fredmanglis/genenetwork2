@@ -54,7 +54,7 @@ from wqflask.ctl import ctl_analysis
 #from wqflask.trait_submission import submit_trait
 
 from utility import temp_data
-from utility.tools import SQL_URI,TEMPDIR,USE_REDIS,USE_GN_SERVER,GN_SERVER_URL,GN_VERSION,JS_TWITTER_POST_FETCHER_PATH
+from utility.tools import TEMPDIR,USE_REDIS,USE_GN_SERVER,GN_SERVER_URL,GN_VERSION,JS_TWITTER_POST_FETCHER_PATH
 from utility.helper_functions import get_species_groups
 
 from base import webqtlFormData
@@ -72,15 +72,6 @@ import werkzeug
 import utility.logger
 logger = utility.logger.getLogger(__name__ )
 
-
-
-@app.before_request
-def connect_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        logger.debug("Get new database connector")
-        g.db = g._database = sqlalchemy.create_engine(SQL_URI)
-        logger.debug(g.db)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -200,7 +191,7 @@ def search_page():
         the_search = search_results.SearchResultPage(request.args)
         result = the_search.__dict__
 
-        logger.debugf("result", result)
+        logger.debugf(0, result)
 
         if USE_REDIS:
             Redis.set(key, pickle.dumps(result, pickle.HIGHEST_PROTOCOL))

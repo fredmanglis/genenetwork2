@@ -46,7 +46,7 @@ from wqflask.database import db_session
 from wqflask import model
 
 from utility import Bunch, Struct, after
-from utility.tools import LOG_SQL, LOG_SQL_ALCHEMY
+from utility.tools import LOG_SQL, LOG_SQL_ALCHEMY, SQL_URI
 
 import logging
 from utility.logger import getLogger
@@ -59,6 +59,8 @@ from utility.elasticsearch_tools import get_elasticsearch_connection, get_user_b
 
 THREE_DAYS = 60 * 60 * 24 * 3
 #THREE_DAYS = 45
+
+hmac_secret_code = app.config['SECRET_HMAC_CODE']
 
 def timestamp():
     return datetime.datetime.utcnow().isoformat()
@@ -159,12 +161,12 @@ def verify_cookie(cookie):
     the_uuid, separator, the_signature = cookie.partition(':')
     assert len(the_uuid) == 36, "Is session_id a uuid?"
     assert separator == ":", "Expected a : here"
-    assert the_signature == actual_hmac_creation(the_uuid), "Uh-oh, someone tampering with the cookie?"
+    assert the_signature == actual_hmac_creation(the_uuid, hmac_secret_code), "Uh-oh, someone tampering with the cookie?"
     return the_uuid
 
 def create_signed_cookie():
     the_uuid = str(uuid.uuid4())
-    signature = actual_hmac_creation(the_uuid)
+    signature = actual_hmac_creation(the_uuid, hmac_secret_code)
     uuid_signed = the_uuid + ":" + signature
     logger.debug("uuid_signed:", uuid_signed)
     return the_uuid, uuid_signed
@@ -239,8 +241,19 @@ class UserSession(object):
 
 @app.before_request
 def before_request():
+    setup_session_objects()
+    connect_db()
+
+def setup_session_objects():
     g.user_session = UserSession()
     g.cookie_session = AnonUser()
+
+def connect_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        logger.debug("Get new database connector")
+        g.db = g._database = sqlalchemy.create_engine(SQL_URI)
+        logger.debug(g.db)
 
 class UsersManager(object):
     def __init__(self):
@@ -506,7 +519,7 @@ class DecodeUser(object):
         self.user = self.actual_get_user(code_prefix, self.verification_code)
 
     def reencode_standalone(self):
-        hmac = actual_hmac_creation(self.verification_code)
+        hmac = actual_hmac_creation(self.verification_code, hmac_secret_code)
         return self.verification_code + ":" + hmac
 
     @staticmethod
@@ -706,7 +719,7 @@ class LoginUser(object):
         login_rec.session_id = str(uuid.uuid4())
         login_rec.assumed_by = assumed_by
         #session_id = "session_id:{}".format(login_rec.session_id)
-        session_id_signature = actual_hmac_creation(login_rec.session_id)
+        session_id_signature = actual_hmac_creation(login_rec.session_id, hmac_secret_code)
         session_id_signed = login_rec.session_id + ":" + session_id_signature
         logger.debug("session_id_signed:", session_id_signed)
 
@@ -861,7 +874,7 @@ def url_for_hmac(endpoint, **values):
 
     url = url_for(endpoint, **values)
 
-    hm = actual_hmac_creation(url)
+    hm = actual_hmac_creation(url, hmac_secret_code)
     if '?' in url:
         combiner = "&"
     else:
@@ -870,7 +883,7 @@ def url_for_hmac(endpoint, **values):
 
 def data_hmac(stringy):
     """Takes arbitray data string and appends :hmac so we know data hasn't been tampered with"""
-    return stringy + ":" + actual_hmac_creation(stringy)
+    return stringy + ":" + actual_hmac_creation(stringy, hmac_secret_code)
 
 
 def verify_url_hmac(url):
@@ -886,16 +899,14 @@ def verify_url_hmac(url):
     #url = divide_up_url(url)[1]
     #logger.debug("after urlsplit, url is:", url)
 
-    hm = actual_hmac_creation(url)
+    hm = actual_hmac_creation(url, hmac_secret_code)
 
     assert hm == hmac, "Unexpected url (stage 3)"
 
-def actual_hmac_creation(stringy):
+def actual_hmac_creation(stringy, secret):
     """Helper function to create the actual hmac"""
 
-    secret = app.config['SECRET_HMAC_CODE']
-
-    hmaced = hmac.new(secret, stringy, hashlib.sha1)
+    hmaced = hmac.new(secret.encode("utf-8"), stringy.encode("utf-8"), hashlib.sha1)
     hm = hmaced.hexdigest()
     # "Conventional wisdom is that you don't lose much in terms of security if you throw away up to half of the output."
     # http://www.w3.org/QA/2009/07/hmac_truncation_in_xml_signatu.html
