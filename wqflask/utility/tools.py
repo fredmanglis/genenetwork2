@@ -276,6 +276,7 @@ SMTP_CONNECT = get_setting('SMTP_CONNECT')
 SMTP_USERNAME = get_setting('SMTP_USERNAME')
 SMTP_PASSWORD = get_setting('SMTP_PASSWORD')
 
+PYTHON2_PROFILE    = get_setting("PYTHON2_PROFILE")+"/lib/python2.7/site-packages"
 PYLMM_COMMAND      = app_set("PYLMM_COMMAND",pylmm_command())
 GEMMA_COMMAND      = app_set("GEMMA_COMMAND",gemma_command())
 assert(GEMMA_COMMAND is not None)
