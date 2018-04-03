@@ -51,7 +51,7 @@ GN2_ID=$(cat /etc/hostname):$(basename $GN2_BASE_DIR)
 
 echo GN2_BASE_DIR=$GN2_BASE_DIR
 
-GUIX_SITE=$GN2_BASE_DIR/lib/python2.7/site-packages
+GUIX_SITE=$GN2_BASE_DIR/lib/python3.5/site-packages
 if [ -d $GUIX_SITE ]; then
     echo INFO: GN2 is running from GNU Guix
     GN2_BASE_DIR=$GUIX_SITE
@@ -108,6 +108,11 @@ if [ -z $GN2_PROFILE ] ; then
     echo "ERROR: always set GN2_PROFILE"
     exit 1
 fi
+if [ -z $PYTHON2_PROFILE ] ; then
+    echo "WARNING: PYTHON2_PROFILE has not been set - you need the environment to run external programs!"
+    echo "ERROR: always set PYTHON2_PROFILE"
+    exit 1
+fi
 if [ -z $GN2_PROFILE ]; then
     read -p "PRESS [ENTER] TO CONTINUE..."
 else
@@ -123,7 +128,7 @@ else
     export LC_ALL=C # FIXME
     export GUIX_GENENETWORK_FILES="$GN2_PROFILE/share/genenetwork2"
     export PLINK_COMMAND="$GN2_PROFILE/bin/plink2"
-    export PYLMM_COMMAND="$GN2_PROFILE/bin/pylmm_redis"
+    export PYLMM_COMMAND="$PYTHON2_PROFILE/bin/pylmm_redis"
     export GEMMA_COMMAND="$GN2_PROFILE/bin/gemma"
     if [ -z $GEMMA_WRAPPER_COMMAND ]; then
         export GEMMA_WRAPPER_COMMAND="$GN2_PROFILE/bin/gemma-wrapper"
