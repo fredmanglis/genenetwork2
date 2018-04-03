@@ -4,10 +4,10 @@ import logging
 from utility.logger import getLogger
 logger = getLogger(__name__)
 
-from utility.tools import ELASTICSEARCH_HOST, ELASTICSEARCH_PORT
+from utility.tools import ELASTICSEARCH_HOSTS
 
 def test_elasticsearch_connection():
-    es = Elasticsearch(['http://'+ELASTICSEARCH_HOST+":"+ELASTICSEARCH_PORT+'/'], verify_certs=True)
+    es = Elasticsearch(ELASTICSEARCH_HOSTS, verify_certs=True)
     if not es.ping():
         logger.warning("Elasticsearch is DOWN")
 
@@ -15,14 +15,10 @@ def get_elasticsearch_connection():
     logger.info("get_elasticsearch_connection")
     es = None
     try:
-        assert(ELASTICSEARCH_HOST)
-        assert(ELASTICSEARCH_PORT)
-        logger.info("ES HOST",ELASTICSEARCH_HOST)
+        assert(ELASTICSEARCH_HOSTS)
+        logger.info("ES HOSTS",ELASTICSEARCH_HOSTS)
 
-        es = Elasticsearch([{
-            "host": ELASTICSEARCH_HOST
-            , "port": ELASTICSEARCH_PORT
-        }]) if (ELASTICSEARCH_HOST and ELASTICSEARCH_PORT) else None
+        es = Elasticsearch(ELASTICSEARCH_HOSTS) if (ELASTICSEARCH_HOSTS) else None
 
         es_logger = logging.getLogger("elasticsearch")
         es_logger.setLevel(logging.INFO)
