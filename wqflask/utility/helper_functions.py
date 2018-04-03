@@ -4,7 +4,7 @@ from base.trait import GeneralTrait
 from base import data_set
 from base.species import TheSpecies
 
-from wqflask import user_manager
+from wqflask import user_manager, app
 
 from flask import Flask, g
 
@@ -37,7 +37,7 @@ def get_trait_db_obs(self, trait_db_list):
     for trait in trait_db_list:
         data, _separator, hmac = trait.rpartition(':')
         data = data.strip()
-        assert hmac==user_manager.actual_hmac_creation(data), "Data tampering?"
+        assert hmac==user_manager.actual_hmac_creation(data, app.config['SECRET_HMAC_CODE']), "Data tampering?"
         trait_name, dataset_name = data.split(":")
         dataset_ob = data_set.create_dataset(dataset_name)
         trait_ob = GeneralTrait(dataset=dataset_ob,

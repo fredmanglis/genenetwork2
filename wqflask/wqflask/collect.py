@@ -28,7 +28,7 @@ from pprint import pformat as pf
 from wqflask.database import db_session
 
 from wqflask import model
-from wqflask import user_manager
+from wqflask import user_manager, app
 
 from utility import Bunch, Struct
 from utility.formatting import numify
@@ -207,7 +207,7 @@ def process_traits(unprocessed_traits):
         #print("trait is:", trait)
         data, _separator, hmac = trait.rpartition(':')
         data = data.strip()
-        assert hmac==user_manager.actual_hmac_creation(data), "Data tampering?"
+        assert hmac==user_manager.actual_hmac_creation(data, app.config['SECRET_HMAC_CODE']), "Data tampering?"
         traits.add(str(data))
 
     return traits
