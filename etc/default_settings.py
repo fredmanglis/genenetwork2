@@ -51,8 +51,10 @@ ORCID_CLIENT_SECRET = "UNKNOWN"
 ORCID_AUTH_URL = "UNKNOWN"
 ORCID_TOKEN_URL = "UNKNOWN"
 
-ELASTICSEARCH_HOST = "localhost"
-ELASTICSEARCH_PORT = '9200'
+# Elasticsearch can be served from many hosts in a cluster.
+# Provide a list of dictionaries, of the form
+# {"host":<ip_or_hostname>, "port":<port>}
+ELASTICSEARCH_HOSTS = [{"host":"localhost", "port":9200}]
 
 SMTP_CONNECT = "localhost"
 SMTP_USERNAME = "UNKNOWN"
