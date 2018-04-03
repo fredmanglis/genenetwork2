@@ -226,9 +226,9 @@ def show_settings():
     keylist.sort()
     for k in keylist:
         try:
-            print(("%s: %s%s%s%s" % (k,BLUE,BOLD,get_setting(k),ENDC)))
+            print(("%s: %s%s%s%s" % (k,BLUE,BOLD,get_setting(k).encode("utf-8"),ENDC)))
         except:
-            print(("%s: %s%s%s%s" % (k,GREEN,BOLD,app.config[k],ENDC)))
+            print(("%s: %s%s%s%s" % (k,GREEN,BOLD,app.config[k].encode("utf-8"),ENDC)))
 
 
 # Cached values
