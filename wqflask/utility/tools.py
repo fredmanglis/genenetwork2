@@ -228,7 +228,7 @@ def show_settings():
         try:
             print(("%s: %s%s%s%s" % (k,BLUE,BOLD,get_setting(k).encode("utf-8"),ENDC)))
         except:
-            print(("%s: %s%s%s%s" % (k,GREEN,BOLD,app.config[k].encode("utf-8"),ENDC)))
+            print(("%s: %s%s%s%s" % (k,GREEN,BOLD,app.config[k],ENDC)))
 
 
 # Cached values
