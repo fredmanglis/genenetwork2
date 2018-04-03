@@ -1139,16 +1139,16 @@ class MrnaAssayDataSet(DataSet):
                     left join ProbeSetSE on
                             (ProbeSetSE.DataId = ProbeSetData.Id AND ProbeSetSE.StrainId = ProbeSetData.StrainId)
                     WHERE
-                            ProbeSet.Name = '%s' AND ProbeSetXRef.ProbeSetId = ProbeSet.Id AND
+                            ProbeSet.Name = %s AND ProbeSetXRef.ProbeSetId = ProbeSet.Id AND
                             ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id AND
-                            ProbeSetFreeze.Name = '%s' AND
+                            ProbeSetFreeze.Name = %s AND
                             ProbeSetXRef.DataId = ProbeSetData.Id AND
                             ProbeSetData.StrainId = Strain.Id
                     Order BY
                             Strain.Name
-                    """ % (escape(trait), escape(self.name))
+                    """
         logger.sql(query)
-        results = g.db.execute(query).fetchall()
+        results = g.db.execute(query, (trait, self.name)).fetchall()
         #logger.debug("RETRIEVED RESULTS HERE:", results)
         return results
 
