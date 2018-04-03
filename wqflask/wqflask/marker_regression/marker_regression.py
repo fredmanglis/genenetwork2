@@ -39,7 +39,7 @@ from utility import temp_data
 from utility.benchmark import Bench
 from wqflask.marker_regression import gemma_mapping, rqtl_mapping, qtlreaper_mapping, plink_mapping
 
-from utility.tools import locate, locate_ignore_error, PYLMM_COMMAND, GEMMA_COMMAND, PLINK_COMMAND, TEMPDIR
+from utility.tools import locate, locate_ignore_error, PYLMM_COMMAND, GEMMA_COMMAND, PLINK_COMMAND, TEMPDIR, PYTHON2_PROFILE
 from utility.external import shell
 from base.webqtlConfig import TMPDIR, GENERATED_TEXT_DIR
 
@@ -391,7 +391,7 @@ class MarkerRegression(object):
                 Redis.set(key, json_params)
                 Redis.expire(key, 60*60)
 
-                command = PYLMM_COMMAND+' --key {} --species {}'.format(key,"other")
+                command = "env PYTHONPATH="+PYTHON2_PROFILE+' '+PYLMM_COMMAND+' --key {} --species {}'.format(key,"other")
                 shell(command)
 
                 json_results = Redis.blpop("pylmm:results:" + temp_uuid, 45*60)
@@ -466,7 +466,7 @@ class MarkerRegression(object):
             Redis.expire(key, 60*60)
             logger.debug("before printing command")
 
-            command = PYLMM_COMMAND + ' --key {} --species {}'.format(key, "other")
+            command = "env PYTHONPATH="+PYTHON2_PROFILE+' '+PYLMM_COMMAND + ' --key {} --species {}'.format(key, "other")
             logger.debug("command is:", command)
             logger.debug("after printing command")
 
@@ -538,7 +538,7 @@ class MarkerRegression(object):
 
         logger.debug("Before creating the command")
 
-        command = PYLMM_COMMAND+' --key {} --species {}'.format(key, "human")
+        command = "env PYTHONPATH="+PYTHON2_PROFILE+' '+PYLMM_COMMAND+' --key {} --species {}'.format(key, "human")
 
         logger.debug("command is:", command)
 
