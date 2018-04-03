@@ -15,8 +15,6 @@ Redis = redis.StrictRedis()
 
 from flask import Flask, g
 
-from htmlgen import HTMLgen2 as HT
-
 from base import webqtlConfig
 from base import webqtlCaseData
 from wqflask.show_trait.SampleList import SampleList

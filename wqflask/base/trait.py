@@ -4,8 +4,6 @@ import string
 import resource
 import codecs
 
-from htmlgen import HTMLgen2 as HT
-
 from base import webqtlConfig
 from base.webqtlCaseData import webqtlCaseData
 from base.data_set import create_dataset
