@@ -28,7 +28,6 @@
 
 import math
 import rpy2.robjects
-import pp
 import string
 
 from utility import webqtlUtil
