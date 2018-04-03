@@ -282,8 +282,8 @@ class MarkerRegression(object):
             self.qtl_results = []
             highest_chr = 1 #This is needed in order to convert the highest chr to X/Y
             for marker in results:
-                if marker['chr'] > 0 or marker['chr'] == "X" or marker['chr'] == "X/Y":
-                    if marker['chr'] > highest_chr or marker['chr'] == "X" or marker['chr'] == "X/Y":
+                if marker['chr'] == "X" or marker['chr'] == "X/Y" or marker['chr'] > 0:
+                    if marker['chr'] == "X" or marker['chr'] == "X/Y" or  marker['chr'] > highest_chr:
                         highest_chr = marker['chr']
                     if ('lod_score' in list(marker.keys())) or ('lrs_value' in list(marker.keys())):
                         self.qtl_results.append(marker)
