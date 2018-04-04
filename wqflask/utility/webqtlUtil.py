@@ -30,11 +30,10 @@ import re
 import math
 from math import *
 
-from htmlgen import HTMLgen2 as HT
+from htmlgen import Image
 
 from base import webqtlConfig
 from functools import reduce
-
 
 
 
@@ -67,15 +66,23 @@ ParInfo ={
 
 
 # NL, 07/27/2010. moved from template.py
-IMGSTEP1 = HT.Image('/images/step1.gif', alt='STEP 1',border=0) #XZ, Only be used in inputPage.py
-IMGSTEP2 = HT.Image('/images/step2.gif', alt='STEP 2',border=0) #XZ, Only be used in inputPage.py
-IMGSTEP3 = HT.Image('/images/step3.gif', alt='STEP 3',border=0) #XZ, Only be used in inputPage.py
-IMGNEXT = HT.Image('/images/arrowdown.gif', alt='NEXT',border=0) #XZ, Only be used in inputPage.py
+IMGSTEP1 = Image('/images/step1.gif', alternate_text='STEP 1') #XZ, Only be used in inputPage.py
+IMGSTEP2 = Image('/images/step2.gif', alternate_text='STEP 2') #XZ, Only be used in inputPage.py
+IMGSTEP3 = Image('/images/step3.gif', alternate_text='STEP 3') #XZ, Only be used in inputPage.py
+IMGNEXT = Image('/images/arrowdown.gif', alternate_text='NEXT') #XZ, Only be used in inputPage.py
+IMGSTEP1.set_attribute("border", "0")
+IMGSTEP2.set_attribute("border", "0")
+IMGSTEP3.set_attribute("border", "0")
+IMGNEXT.set_attribute("border", "0")
 
-IMGASC = HT.Image("/images/sortup.gif", border=0)
-IMGASCON = HT.Image("/images/sortupon.gif", border=0)
-IMGDESC = HT.Image("/images/sortdown.gif", border=0)
-IMGDESCON = HT.Image("/images/sortdownon.gif", border=0)
+IMGASC = Image("/images/sortup.gif")
+IMGASCON = Image("/images/sortupon.gif")
+IMGDESC = Image("/images/sortdown.gif")
+IMGDESCON = Image("/images/sortdownon.gif")
+IMGASC.set_attribute("border", "0")
+IMGASCON.set_attribute("border", "0")
+IMGDESC.set_attribute("border", "0")
+IMGDESCON.set_attribute("border", "0")
 
 """
 IMGASC = HT.Image("/images/sortup_icon.gif", border=0)
@@ -85,7 +92,9 @@ IMGDESCON = HT.Image("/images/sortdownon.gif", border=0)
 IMG_UNSORTED = HT.Image("/images/unsorted_icon.gif", border=0)
 """
 
-PROGRESSBAR = HT.Image('/images/waitAnima2.gif', alt='checkblue',align="middle",border=0)
+PROGRESSBAR = Image('/images/waitAnima2.gif', alternate_text='checkblue')
+PROGRESSBAR.set_attribute("align", "middle")
+PROGRESSBAR.set_attribute("border", "0")
 
 #########################################
 #      Accessory Functions
@@ -232,7 +241,7 @@ def asymTranspose(m):
         m2[i] = m[i] + [""]*(t- len(m[i]))
     return [[m2[j][i] for i in range(len(m2[0])) for j in range(n)][k*n:k*n+n] for k in range(len(m2[0]))]
 
-def genRandStr(prefix = "", length=8, chars=string.letters+string.digits):
+def genRandStr(prefix = "", length=8, chars=string.ascii_letters+string.digits):
     from random import choice
     _str = prefix[:]
     for i in range(length):
@@ -965,18 +974,23 @@ def genTableObj(tblobj=None, file="", sortby = ("", ""), tableID = "sortable", a
     #ZAS 9/12/2011 - The hiddenColumns array needs to be converted into a string so they can be placed into the javascript of each up/down button
     hiddenColumnsString = ",".join(hiddenColumns)
 
-    tbl = HT.TableLite(Class="collap b2", cellspacing=1, cellpadding=5)
+    tbl = Table()
+    tbl.add_css_classes("collap b2")
+    tbl.set_attribute("cellspacing", "1")
+    tbl.set_attribute("cellpadding", "5")
+    tbl_header = tbl.create_head()
+    tbl_body = tbl.create_body()
 
     hiddenColumnIdx = [] #indices of columns to hide
     idx = -1
     last_idx = 0 #ZS: This is the index of the last item in the regular table header (without any extra parameters). It is used to determine the index of each extra parameter.
     for row in header:
-        hr = HT.TR()
+        hr = tbl_header.create_row()
         for i, item in enumerate(row):
             if (item.text == '') or (item.text not in hiddenColumns):
                 if item.sort and item.text:
-                    down = HT.Href("javascript:xmlhttpPost('%smain.py?FormID=AJAX_table', '%s', 'sort=%s&order=down&file=%s&tableID=%s&addIndex=%s&hiddenColumns=%s')" % (webqtlConfig.CGIDIR, tableID, item.text, file, tableID, addIndex, hiddenColumnsString),IMGDESC)
-                    up = HT.Href("javascript:xmlhttpPost('%smain.py?FormID=AJAX_table', '%s', 'sort=%s&order=up&file=%s&tableID=%s&addIndex=%s&hiddenColumns=%s')" % (webqtlConfig.CGIDIR, tableID, item.text, file, tableID, addIndex, hiddenColumnsString),IMGASC)
+                    down = Link("javascript:xmlhttpPost('%smain.py?FormID=AJAX_table', '%s', 'sort=%s&order=down&file=%s&tableID=%s&addIndex=%s&hiddenColumns=%s')" % (webqtlConfig.CGIDIR, tableID, item.text, file, tableID, addIndex, hiddenColumnsString),IMGDESC)
+                    up = Link("javascript:xmlhttpPost('%smain.py?FormID=AJAX_table', '%s', 'sort=%s&order=up&file=%s&tableID=%s&addIndex=%s&hiddenColumns=%s')" % (webqtlConfig.CGIDIR, tableID, item.text, file, tableID, addIndex, hiddenColumnsString),IMGASC)
                     if item.text == field:
                         idx = item.idx
                         last_idx = idx
@@ -984,11 +998,10 @@ def genTableObj(tblobj=None, file="", sortby = ("", ""), tableID = "sortable", a
                             up = IMGASCON
                         elif order == 'down':
                             down = IMGDESCON
-                    item.html.append(HT.Div(up, down, style="float: bottom;"))
-                hr.append(item.html)
+                    item.html.append(Division(up, down, style="float: bottom;"))
+                cell = hr.create_cell(item.html)
             else:
                 hiddenColumnIdx.append(i)
-        tbl.append(hr)
 
     for i, row in enumerate(body):
         for j, item in enumerate(row):
@@ -1008,14 +1021,14 @@ def genTableObj(tblobj=None, file="", sortby = ("", ""), tableID = "sortable", a
             pass
 
     for i, row in enumerate(body):
-        hr = HT.TR(Id = row[0].text)
+        hr = tbl_header.create_row()
+        hr.id = row[0].text
         for j, item in enumerate(row):
             if (j not in hiddenColumnIdx):
                 if j == 0:
                     if addIndex == "1":
                         item.html.contents = [i+1] + item.html.contents
-                hr.append(item.html)
-        tbl.append(hr)
+                hr.create_cell(item.html)
 
     return tbl
 

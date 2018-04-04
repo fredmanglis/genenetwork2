@@ -28,8 +28,6 @@
 
 from flask import request
 
-from htmlgen import HTMLgen2 as HT
-
 from base import webqtlConfig
 from utility import webqtlUtil
 from base.webqtlTrait import webqtlTrait

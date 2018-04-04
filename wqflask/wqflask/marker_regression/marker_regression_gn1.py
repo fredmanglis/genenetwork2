@@ -34,7 +34,9 @@ import http.client, urllib.request, urllib.parse, urllib.error
 
 from flask import Flask, g
 
-from htmlgen import HTMLgen2 as HT
+from htmlgen import (Element,Paragraph,LineBreak,Division,Span,Image,Link,Form,
+                     Input,HiddenInput,Checkbox,RadioButton,Button,Select,
+                     TextInput,Table)
 
 from base import webqtlConfig
 from base.GeneralObject import GeneralObject
@@ -47,6 +49,31 @@ from base.webqtlConfig import TMPDIR, GENERATED_TEXT_DIR, GENERATED_IMAGE_DIR
 import utility.logger
 from functools import reduce
 logger = utility.logger.getLogger(__name__ )
+
+def make_map_area(shape='rect', coords=None, href=None, title=None, target=None):
+    def set_attribute_if_present(area, attr_value, attr_name):
+        if attr_value is not None:
+            area.set_attribute(attr_name, attr_value)
+
+        return area
+
+    newArea = Element("area")
+    newArea = set_attribute_if_present(newArea, coords, "coords")
+    newArea = set_attribute_if_present(newArea, href, "href")
+    newArea = set_attribute_if_present(newArea, title, "title")
+    newArea = set_attribute_if_present(newArea, target, "target")
+    return newArea
+
+def make_checkbox(name, value, checked, css_classes):
+    cb = Checkbox(name=name, value=value)
+    cb.checked = checked
+    cb.add_css_classes(css_classes)
+    return cb
+
+def make_radio_button(name, value, checked=False):
+    rb = RadioButton(name=name, value=value)
+    rb.checked = checked
+    return rb
 
 #########################################
 #      Inteval Mapping Plot Page
@@ -84,7 +111,10 @@ class MarkerRegression(object):
 
     MIN_PIXELS_BETWEEN_LABELS = 50
 
-    qmarkImg = HT.Image('/images/qmarkBoxBlue.gif', width=10, height=13, border=0, alt='Glossary')
+    qmarkImg = Image('/images/qmarkBoxBlue.gif', alternate_text='Glossary')
+    qmarkImg.set_attribute("width", "10")
+    qmarkImg.set_attribute("height", "13")
+    qmarkImg.set_attribute("border", "0")
     # Note that "qmark.gif" is a similar, smaller, rounded-edges question mark. It doesn't look
     # like the ones on the image, though, which is why we don't use it here.
 
@@ -555,15 +585,9 @@ class MarkerRegression(object):
                #GENEID = fd.formdata.getvalue('GeneId') or None
                GENEID = None
 
-               geneTableContainer = HT.Div(Id="sortable") #Div to hold table
+               geneTableContainer = Division() #Div to hold table
+               geneTableContainer.id = "sortable"
                self.geneTable(self.geneCol, GENEID)
-               #geneTable = self.geneTable(self.geneCol, GENEID)
-               #geneTableContainer.append(geneTable)
-
-               #mainfmName = webqtlUtil.genRandStr("fm_")
-               #tableForm = HT.Form(cgi=os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype='multipart/form-data', name=mainfmName, submit=HT.Input(type='hidden'))
-               #tableForm.append(HT.Input(name='FormID', value='', type='hidden'))
-               #tableForm.append(geneTableContainer)
 
 
         ################################################################
@@ -580,41 +604,35 @@ class MarkerRegression(object):
 
         self.filename= webqtlUtil.genRandStr("Itvl_")
         intCanvas.save(os.path.join(webqtlConfig.GENERATED_IMAGE_DIR, self.filename), format='png')
-        intImg=HT.Image('/image/'+self.filename+'.png', border=0, usemap='#WebQTLImageMap')
+        intImg=Image('/image/'+self.filename+'.png')
+        intImg.set_attribute("border", "0")
+        intImg.set_attribute("usemap", "#WebQTLImageMap")
 
         #Scales plot differently for high resolution
         if self.draw2X:
             intCanvasX2 = pid.PILCanvas(size=(self.graphWidth*2,self.graphHeight*2))
             gifmapX2 = self.plotIntMapping(intCanvasX2, startMb = self.startMb, endMb = self.endMb, showLocusForm= showLocusForm, zoom=2)
             intCanvasX2.save(os.path.join(webqtlConfig.GENERATED_IMAGE_DIR, self.filename+"X2"), format='png')
-            #DLintImgX2=HT.Href(text='Download',url = '/image/'+self.filename+'X2.png', Class='smallsize', target='_blank')
-
-        #textUrl = self.writeQTL2Text(fd, self.filename)
 
         ################################################################
         # Info tables goes here
         ################################################################
-        #traitInfoTD = self.traitInfoTD(fd)
 
-        #if self.draw2X:
-        #    traitInfoTD.append(HT.P(), DLintImgX2, ' a higher resolution 2X image. ')
-        #else:
-        #    traitInfoTD.append(HT.P())
-        #if textUrl:
-        #    traitInfoTD.append(HT.BR(), textUrl, ' results in tab-delimited text format.')
-        #traitRemapTD = self.traitRemapTD(self.cursor, fd)
-        #topTable = HT.TableLite(HT.TR(traitInfoTD, HT.TD("&nbsp;", width=25), traitRemapTD), border=0, cellspacing=0, cellpadding=0)
 
         ################################################################
         # Outputs goes here
         ################################################################
         #this form is used for opening Locus page or trait page, only available for genetic mapping
         if showLocusForm:
-            showLocusForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype='multipart/form-data',
-                name=showLocusForm, submit=HT.Input(type='hidden'))
+            formName = showLocusForm
+            hiddenInput = HiddenInput(name="changeThis", value="")
+            showLocusForm = Form("POST", os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE))
+            showLocusForm.multipart = True
+            showLocusForm.set_attribute("name", formName)
+            showLocusForm.append(hiddenInput)
             hddn = {'FormID':'showDatabase', 'ProbeSetID':'_','database':fd.RISet+"Geno",'CellID':'_', 'RISet':fd.RISet, 'incparentsf1':'ON'}
             for key in list(hddn.keys()):
-                showLocusForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
+                showLocusForm.append(Input(name=key, value=hddn[key], type='hidden'))
             showLocusForm.append(intImg)
         else:
             showLocusForm = intImg
@@ -626,66 +644,115 @@ class MarkerRegression(object):
         ################################################################
         # footnote goes here
         ################################################################
-        btminfo = HT.Paragraph(Id="smallsize") #Small('More information about this graph is available here.')
-
-        #if (self.additiveChecked):
-        #    btminfo.append(HT.BR(), 'A positive additive coefficient (', HT.Font('green', color='green'), ' line) indicates that %s alleles increase trait values. In contrast, a negative additive coefficient (' % fd.ppolar, HT.Font('red', color='red'), ' line) indicates that %s alleles increase trait values.' % fd.mpolar)
+        btminfo = Paragraph() #Small('More information about this graph is available here.')
+        btminfo.id = "smallsize"
 
         if self.traitList and self.traitList[0].dataset and self.traitList[0].dataset.type == 'Geno':
-            btminfo.append(HT.BR(), 'Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
+            btminfo.append(LineBreak())
+            btminfo.append('Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
 
-        #if self.permChecked and not self.multipleInterval and 0 < self.nperm:
-        #    TD_LR = HT.TD(HT.Blockquote(gifmap, showLocusForm, HT.P(), btminfo, HT.P(), perm_histogram, HT.P(), perm_text_file), bgColor='#eeeeee', height = 200)
-        #    #TD_LR = HT.TD(HT.Blockquote(topTable), HT.Blockquote(gifmap, showLocusForm, HT.P(), btminfo, HT.P(), perm_histogram, HT.P(), perm_text_file), bgColor='#eeeeee', height = 200)
-        #else:
-        TD_LR = HT.TD(HT.Blockquote(gifmap, showLocusForm, HT.P(), btminfo), bgColor='#eeeeee', height = 200)
-        #TD_LR = HT.TD(HT.Blockquote(topTable), HT.Blockquote(gifmap, showLocusForm, HT.P(), btminfo, HT.P(), perm_histogram, HT.P(), perm_text_file), bgColor='#eeeeee', height = 200)
-
+        gifmapBq = Element("blockquote")
+        gitmapBq.append(gifmap)
+        gitmapBq.append(showLocusForm)
+        gitmapBq.append(Paragraph())
+        gitmapBq.append(btminfo)
+        gitmapBq.set_attribute("bgColor", '#eeeeee')
+        gitmapBq.set_attribute("height", "200")
+        TD_LR = TableCell(gifmapBq)
 
         if geneTable:
-            iaForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, "main.py?FormID=intervalAnalyst"), enctype='multipart/form-data',
-                name="iaForm", submit=HT.Input(type='hidden'))
+            iaForm = Form("POST", cgi= os.path.join(webqtlConfig.CGIDIR, "main.py?FormID=intervalAnalyst"))
+            iaForm.multipart = True
+            iaForm.set_attribute("name", "iaForm")
+            iaForm.append(HiddenInput(name='changeThis', value=""))
             hddn = {'chromosome':self.genotype[0].name, 'species':self.species,'startMb':self.startMb,'endMb':self.endMb}
             if self.diffCol:
                 hddn['s1'] = self.diffCol[0]
                 hddn['s2'] = self.diffCol[1]
             for key in list(hddn.keys()):
-                iaForm.append(HT.Input(name=key, value=hddn[key], type='hidden'))
-            iaForm.append(HT.Paragraph("Interval Analyst : Chr %s from %2.6f to %2.6f Mb" % (self.genotype[0].name, self.startMb, self.endMb),
-                HT.Input(name='customize', value='Customize', onClick= "formInNewWindow(this.form);", type='button', Class="button"), Class="subtitle"))
-            TD_LR.append(HT.Blockquote(iaForm))
+                iaForm.append(HiddenInput(name=key, value=hddn[key]))
+            subTitleBtn = Button("Customize")
+            subTitleBtn.set_attribute("name", 'customize')
+            subTitleBtn.set_attribute("onClick", "formInNewWindow(this.form);")
+            subTitleBtn.add_css_classes("button")
+            subTitlePara = Paragraph("Interval Analyst : Chr %s from %2.6f to %2.6f Mb" % (self.genotype[0].name, self.startMb, self.endMb))
+            subTitlePara.add_css_classes("subtitle")
+            iaForm.append(subTitlePara)
+            formBq = Element("blockquote")
+            formBq.append(iaForm)
+            TD_LR.append(formBq)
             # optionsTable
-            selectall = HT.Href(url="#redirect", onClick="checkAll(document.getElementsByName('%s')[0]);" % mainfmName)
-            selectall_img = HT.Image("/images/select_all2_final.jpg", name="selectall", alt="Select All", title="Select All", style="border:none;")
+            selectall = Link(url="#redirect")
+            selectall.set_attribute("onClick", "checkAll(document.getElementsByName('%s')[0]);" % mainfmName)
+            selectall_img = Image("/images/select_all2_final.jpg", alternate_text="Select All")
+            selectall_img.title="Select All"
+            selectall_img.set_attribute("name", "selectall")
+            selectall_img.set_attribute("style", "border:none;")
             selectall.append(selectall_img)
-            reset = HT.Href(url="#redirect", onClick="checkNone(document.getElementsByName('%s')[0]); return false;" % mainfmName)
-            reset_img = HT.Image("/images/select_none2_final.jpg", alt="Select None", title="Select None", style="border:none;")
+
+            reset = Link(url="#redirect")
+            reset.set_attribute("onClick", "checkNone(document.getElementsByName('%s')[0]); return false;" % mainfmName)
+            reset_img = Image("/images/select_none2_final.jpg", alternate_text="Select None")
+            reset_img.title="Select None"
+            reset_img.set_attribute("style", "border:none;")
             reset.append(reset_img)
-            selectinvert = HT.Href(url="#redirect", onClick = "checkInvert(document.getElementsByName('%s')[0]);" % mainfmName)
-            selectinvert_img = HT.Image("/images/invert_selection2_final.jpg", name="selectinvert", alt="Invert Selection", title="Invert Selection", style="border:none;")
+
+            selectinvert = Link(url="#redirect")
+            selectinvert_img.title="Invert Selection"
+            selectinvert.set_attribute("onClick", "checkInvert(document.getElementsByName('%s')[0]);" % mainfmName)
+            selectinvert_img = Image("/images/invert_selection2_final.jpg", alternate_text="Invert Selection")
+            selectinvert_img.set_attribute("name", "selectinvert")
+            selectinvert_img.set_attribute("style", "border:none;")
             selectinvert.append(selectinvert_img)
-            addselect = HT.Href(url="#redirect", onClick="addRmvSelection('%s', document.getElementsByName('%s')[0], 'addToSelection');" % (RISet, mainfmName))
-            addselect_img = HT.Image("/images/add_collection1_final.jpg", name="addselect", alt="Add To Collection", title="Add To Collection", style="border:none;")
+
+            addselect = Link(url="#redirect")
+            addselect.set_attribute("onClick", "addRmvSelection('%s', document.getElementsByName('%s')[0], 'addToSelection');" % (RISet, mainfmName))
+            addselect_img = Image("/images/add_collection1_final.jpg", alternate_text="Add To Collection")
+            addselect_img.title="Add To Collection"
+            addselect_img.set_attribute("name", "addselect")
+            addselect_img.set_attribute("style", "border:none;")
             addselect.append(addselect_img)
-            geneweaver = HT.Href(url="#redirect", onClick="databaseFunc(document.getElementsByName('%s')[0], 'ODEIM');" % mainfmName)
-            geneweaver_img = HT.Image("/images/ODE_logo_final.jpg", name="GeneWeaver", alt="Gene Weaver", title="Gene Weaver", style="border:none")
+
+            geneweaver = Link(url="#redirect")
+            geneweaver.set_attribute("onClick", "databaseFunc(document.getElementsByName('%s')[0], 'ODEIM');" % mainfmName)
+            geneweaver_img = Image("/images/ODE_logo_final.jpg", alternate_text="Gene Weaver")
+            geneweaver_img.title="Gene Weaver"
+            geneweaver_img.set_attribute("name", "GeneWeaver")
+            geneweaver_img.set_attribute("style", "border:none")
             geneweaver.append(geneweaver_img)
-            optionsTable = HT.TableLite()
-            optionsTable.append(HT.TR(
-                HT.TD(selectall, width="77", style="text-align:center"),
-                HT.TD(reset, width="77", style="text-align:center"),
-                HT.TD(selectinvert, width="77", style="text-align:center"),
-                HT.TD(geneweaver, width="77", style="text-align:center"),
-                ))
-            optionsTable.append(HT.TR(
-                HT.TD("Select", style="text-align:center"),
-                HT.TD("Deselect", style="text-align:center"),
-                HT.TD("Invert", style="text-align:center"),
-                HT.TD("Gene Weaver", style="text-align:center"),
-                ))
-            TD_LR.append(HT.Blockquote(optionsTable))
+
+            optionsTable = Table()
+            row = optionsTable.create_row()
+            cell = row.create_cell(selectall)
+            cell.set_attribute("width", "77")
+            cell.set_attribute("style", "text-align:center")
+            cell2 = row.create_cell(reset)
+            cell2.set_attribute("width", "77")
+            cell2.set_attribute("style", "text-align:center")
+            cell3 = row.create_cell(selectinvert)
+            cell3.set_attribute("width", "77")
+            cell3.set_attribute("style", "text-align:center")
+            cell4 = row.create_cell(geneweaver)
+            cell4.set_attribute("width", "77")
+            cell4.set_attribute("style", "text-align:center")
+
+            row2 = optionsTable.create_row()
+            cell5 = row2.create_cell("Select")
+            cell5.set_attribute("style", "text-align:center")
+            cell6 = row2.create_cell("Deselect")
+            cell6.set_attribute("style", "text-align:center")
+            cell7 = row2.create_cell("Invert")
+            cell7.set_attribute("style", "text-align:center")
+            cell8 = row2.create_cell("Gene Weaver")
+            cell8.set_attribute("style", "text-align:center")
+
+            tableBq = Element("blockquote")
+            tableBq.append(optionsTable)
+            TD_LR.append(tableBq)
             # geneTableContainer
-            TD_LR.append(HT.Blockquote(tableForm))
+            tableFormBq = Element("blockquote")
+            tableFormBq.append(tableForm)
+            TD_LR.append(tableFormBq)
 
         self.body = TD_LR
 
@@ -770,7 +837,6 @@ class MarkerRegression(object):
 
         fpText.close()
         textUrl = '/tmp/'+filename+'.txt'
-        #textUrl = HT.Href(text = 'Download', url= '/tmp/'+filename+'.txt', target = "_blank", Class='smallsize')
         return textUrl
 
     def plotIntMapping(self, canvas, offset= (80, 120, 20, 100), zoom = 1, startMb = None, endMb = None, showLocusForm = ""):
@@ -823,7 +889,8 @@ class MarkerRegression(object):
             drawAreaHeight -= 60
 
         #Image map
-        gifmap = HT.Map(name = "WebQTLImageMap")
+        gifmap = Element("map")
+        gifmap.set_attribute("name", "WebQTLImageMap")
         #gifmap = None
 
         newoffset = (xLeftOffset, xRightOffset, yTopOffset, yBottomOffset)
@@ -1140,8 +1207,7 @@ class MarkerRegression(object):
 
                 COORDS = "%d,%d,%d,%d" %(rectWidth+2+rightShift,yPaddingTop+kstep*15,rectWidth+2+rightShift+nameWidth,yPaddingTop+10+kstep*15,)
                 HREF= "javascript:showDatabase3('%s','%s','%s','');" % (showLocusForm, thisTrait.db.name, thisTrait.name)
-                Areas = HT.Area(shape='rect',coords=COORDS,href=HREF)
-                gifmap.areas.append(Areas)
+                gifmap.areas.append(make_map_area(shape='rect', coords=COORDS, href=HREF))
 
 
     def drawLegendPanel(self, canvas, offset= (40, 120, 80, 10), zoom = 1, locLocation= None):
@@ -1435,7 +1501,7 @@ class MarkerRegression(object):
 
             COORDS = "%d, %d, %d, %d" %(geneStartPix, geneYLocation, geneEndPix, (geneYLocation + self.EACH_GENE_HEIGHT))
             # NL: 06-02-2011 Rob required to display NCBI info in a new window
-            gifmap.areas.append(HT.Area(shape='rect',coords=COORDS,href=HREF, title=TITLE,target="_blank"))
+            gifmap.areas.append(make_map_area(shape='rect', href=HREF, title=TITLE, target="_blank"))
 
 ## BEGIN HaplotypeAnalyst
     def drawHaplotypeBand(self, canvas, gifmap, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
@@ -1603,7 +1669,7 @@ class MarkerRegression(object):
                             COORDS = "%d, %d, %d, %d" %(geneStartPix, geneYLocation+ind*self.EACH_GENE_HEIGHT, geneEndPix+1, (geneYLocation + ind*self.EACH_GENE_HEIGHT))
                             TITLE = "Strain: %s, marker (%s) \n Position  %2.3f Mb." % (samplelist[j], self.genotype[0][i].name, float(txStart))
                             HREF = ''
-                            gifmap.areas.append(HT.Area(shape='rect',coords=COORDS,href=HREF, title=TITLE))
+                            gifmap.areas.append(make_map_area(shape='rect', coords=COORDS, href=HREF, title=TITLE))
 
                             # if there are no more markers in a chromosome, the plotRight value calculated above will be before the plotWidth
                             # resulting in some empty space on the right side of the plot area. This draws an "unknown" bar from plotRight to the edge.
@@ -1693,7 +1759,7 @@ class MarkerRegression(object):
                 WEBQTL_HREF = "javascript:rangeView('%s', %f, %f)" % (self.selectedChr - 1, max(0, (calBase-webqtlZoomWidth))/1000000.0, (calBase+webqtlZoomWidth)/1000000.0)
 
                 WEBQTL_TITLE = "Click to view this section of the genome in WebQTL"
-                gifmap.areas.append(HT.Area(shape='rect',coords=WEBQTL_COORDS,href=WEBQTL_HREF, title=WEBQTL_TITLE))
+                gifmap.areas.append(make_map_area(shape='rect', coords=WEBQTL_COORDS, href=WEBQTL_HREF, title=WEBQTL_TITLE))
                 canvas.drawRect(xBrowse1, paddingTop, xBrowse2, (paddingTop + self.WEBQTL_BAND_HEIGHT), edgeColor=self.CLICKABLE_WEBQTL_REGION_COLOR, fillColor=self.CLICKABLE_WEBQTL_REGION_COLOR)
                 canvas.drawLine(xBrowse1, paddingTop, xBrowse1, (paddingTop + self.WEBQTL_BAND_HEIGHT), color=self.CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR)
 
@@ -1703,7 +1769,7 @@ class MarkerRegression(object):
                 else:
                     UCSC_HREF = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&position=chr%s:%d-%d" % (self._ucscDb, self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                 UCSC_TITLE = "Click to view this section of the genome in the UCSC Genome Browser"
-                gifmap.areas.append(HT.Area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
+                gifmap.areas.append(make_map_area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
                 canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.UCSC_BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
                 canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.UCSC_BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
 
@@ -1713,7 +1779,7 @@ class MarkerRegression(object):
                 else:
                     ENSEMBL_HREF = "http://www.ensembl.org/Rattus_norvegicus/contigview?chr=%s&start=%d&end=%d" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                 ENSEMBL_TITLE = "Click to view this section of the genome in the Ensembl Genome Browser"
-                gifmap.areas.append(HT.Area(shape='rect',coords=ENSEMBL_COORDS,href=ENSEMBL_HREF, title=ENSEMBL_TITLE))
+                gifmap.areas.append(make_map_area(shape='rect',coords=ENSEMBL_COORDS,href=ENSEMBL_HREF, title=ENSEMBL_TITLE))
                 canvas.drawRect(xBrowse1, ensemblPaddingTop, xBrowse2, (ensemblPaddingTop+self.ENSEMBL_BAND_HEIGHT), edgeColor=self.CLICKABLE_ENSEMBL_REGION_COLOR, fillColor=self.CLICKABLE_ENSEMBL_REGION_COLOR)
                 canvas.drawLine(xBrowse1, ensemblPaddingTop, xBrowse1, (ensemblPaddingTop+self.ENSEMBL_BAND_HEIGHT), color=self.CLICKABLE_ENSEMBL_REGION_OUTLINE_COLOR)
             # end for
@@ -1899,7 +1965,7 @@ class MarkerRegression(object):
                             xLeftOffset+offsetA,yZero+40+Zorder*(LRectWidth+3)+LRectWidth)
                     HREF="/show_trait?trait_id=%s&dataset=%s" % (Lname, self.dataset.group.name+"Geno")
                     #HREF="javascript:showDatabase3('%s','%s','%s','');" % (showLocusForm,fd.RISet+"Geno", Lname)
-                    Areas=HT.Area(shape='rect', coords=COORDS, href=HREF, target="_blank", title="Locus : " + Lname)
+                    Areas=make_map_area(shape='rect', coords=COORDS, href=HREF, target="_blank", title="Locus : " + Lname)
                     gifmap.areas.append(Areas)
                 ##piddle bug
                 if j == 0:
@@ -2032,8 +2098,8 @@ class MarkerRegression(object):
                 else:
                     sugg_title = "Suggestive LOD = %0.2f" % (self.suggestive/4.61)
                     sig_title = "Significant LOD = %0.2f" % (self.significant/4.61)
-                Areas1 = HT.Area(shape='rect',coords=sugg_coords,title=sugg_title)
-                Areas2 = HT.Area(shape='rect',coords=sig_coords,title=sig_title)
+                Areas1 = make_map_area(shape='rect',coords=sugg_coords,title=sugg_title)
+                Areas2 = make_map_area(shape='rect',coords=sig_coords,title=sig_title)
                 gifmap.areas.append(Areas1)
                 gifmap.areas.append(Areas2)
 
@@ -2345,7 +2411,7 @@ class MarkerRegression(object):
                 #add by NL 09-03-2010
                 HREF = "javascript:chrView(%d,%s);" % (i,self.ChrLengthMbList)
                 #HREF = "javascript:changeView(%d,%s);" % (i,self.ChrLengthMbList)
-                Areas = HT.Area(shape='rect',coords=COORDS,href=HREF)
+                Areas = make_map_area(shape='rect',coords=COORDS,href=HREF)
                 gifmap.areas.append(Areas)
                 startPosX +=  (self.ChrLengthDistList[i]+self.GraphInterval)*plotXScale
 
@@ -2485,61 +2551,88 @@ class MarkerRegression(object):
         return P_value
 
     def helpButton(self, anchor):
-        return HT.Href(self.HELP_PAGE_REF + '#%s' % anchor, self.qmarkImg, target=self.HELP_WINDOW_NAME)
+        link = Link(
+            self.HELP_PAGE_REF + '#%s' % anchor
+            , self.qmarkImg)
+        link.set_attribute("target", self.HELP_WINDOW_NAME)
+        return link
 
 
     def traitRemapTD(self, cursor, fd):
-        chrList = HT.Select(name="chromosomes", data=self.ChrList, selected=[self.selectedChr],
-                onChange="chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
+        chrList = Select(name="chromosomes")
+        for label, value in self.ChrList:
+            chrList.create_option(label, value, value==self.selectedChr)
 
-        physicOnly = HT.Span(' *', Class="cr")
+        chrList.set_attribute(
+            "onChange"
+            , "chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
 
-        showSNPCheck   = HT.Input(type='checkbox', Class='checkbox', name='showSNP', value='ON', checked=self.SNPChecked)
-        showSNPText    = HT.Span('SNP Track ', self.helpButton("snpSeismograph"), Class="fs12 fwn")
+        physicOnly = Span(' *')
+        physicOnly.add_css_classes("cr")
 
-        showGenesCheck = HT.Input(type='checkbox', Class='checkbox', name='showGenes', value='ON', checked=self.geneChecked)
-        showGenesText  = HT.Span('Gene Track', Class="fs12 fwn")
+        showSNPCheck = make_checkbox(name='showSNP', value='ON', checked=self.SNPChecked, css_classes='checkbox')
+        showSNPText = Span('SNP Track ', self.helpButton("snpSeismograph"))
+        showSNPText.add_css_classes(="fs12 fwn")
 
-        showIntervalAnalystCheck = HT.Input(type='checkbox', Class='checkbox', name='intervalAnalystCheck', value='ON', checked=self.intervalAnalystChecked)
-        showIntervalAnalystText = HT.Span('Interval Analyst', Class="fs12 fwn")
+        showGenesCheck = make_checkbox(name='showGenes', value='ON', checked = self.geneChecked, css_classes='checkbox')
+        showGenesText  = Span('Gene Track')
+        showGenesText.add_css_classes("fs12 fwn")
+
+        showIntervalAnalystCheck = make_checkbox(name='intervalAnalystCheck', value='ON', checked=self.intervalAnalystChecked, css_classes='checkbox')
+        showIntervalAnalystText = Span('Interval Analyst')
+        showIntervalAnalystText.add_css_classes("fs12 fwn")
 ## BEGIN HaplotypeAnalyst
 
-        showHaplotypeAnalystCheck = HT.Input(type='checkbox', Class='checkbox', name='haplotypeAnalystCheck', value='ON', checked=self.haplotypeAnalystChecked)
-        showHaplotypeAnalystText = HT.Span('Haplotype Analyst', Class="fs12 fwn")
+        showHaplotypeAnalystCheck = make_checkbox(name='haplotypeAnalystCheck', value='ON', checked=self.haplotypeAnalystChecked, css_classes='checkbox')
+        showHaplotypeAnalystText = Span('Haplotype Analyst')
+        showHaplotypeAnalystText.add_css_classes("fs12 fwn")
 ## END HaplotypeAnalyst
 
-        leftBox = HT.Input(type="text", name="startMb", size=10)
-        rightBox = HT.Input(type="text", name="endMb", size=10)
+        leftBox = TextInput(name="startMb")
+        leftBox.size = 10
+        rightBox = TextInput(name="endMb")
+        rightBox.size = 10
         if self.selectedChr > -1 and self.plotScale=='physic':
             leftBox.value = self.startMb
             rightBox.value = self.endMb
 
-        scaleBox = HT.Select(name="scale", onChange="chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
-        scaleBox.append(("Genetic", "morgan"))
+        scaleBox = Select(name="scale")
+        scaleBox.set_attribute("onChange", "chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
+        scaleBox.create_option("Genetic", "morgan", "morgan"==self.plotScale)
         if fd.genotype.Mbmap:
-            scaleBox.append(("Physical", "physic"))
-        scaleBox.selected.append(self.plotScale)
+            scaleBox.create_option("Physical", "physic", "physic"==self.plotScale)
 
-        permBox = HT.Input(type="checkbox", name="permCheck", value='ON', checked=self.permChecked, Class="checkbox")
-        permText = HT.Span("Permutation Test ", self.helpButton("Permutation"), Class="fs12 fwn")
-        bootBox = HT.Input(type="checkbox", name="bootCheck", value='ON', checked=self.bootChecked, Class="checkbox")
-        bootText = HT.Span("Bootstrap Test ", self.helpButton("bootstrap"), Class="fs12 fwn")
-        additiveBox = HT.Input(type="checkbox", name="additiveCheck", value='ON', checked=self.additiveChecked, Class="checkbox")
-        additiveText = HT.Span("Allele Effects ", self.helpButton("additive"), Class="fs12 fwn")
-        dominanceBox = HT.Input(type="checkbox", name="dominanceCheck", value='ON', checked=self.dominanceChecked, Class="checkbox")
-        dominanceText = HT.Span("Dominance Effects ", self.helpButton("Dominance"), Class="fs12 fwn")
+        permBox = make_checkbox(name="permCheck", value='ON', checked=self.permChecked, css_classes="checkbox")
+        permText = Span("Permutation Test ", self.helpButton("Permutation"))
+        permText.add_css_classes("fs12 fwn")
+        bootBox = make_checkbox(name="bootCheck", value='ON', checked=self.bootChecked, css_classes="checkbox")
+        bootText = Span("Bootstrap Test ", self.helpButton("bootstrap"))
+        bootText.add_css_classes("fs12 fwn")
+        additiveBox = make_checkbox(name="additiveCheck", value='ON', checked=self.additiveChecked, css_classes="checkbox")
+        additiveText = Span("Allele Effects ", self.helpButton("additive"))
+        additiveText.add_css_classes("fs12 fwn")
+        dominanceBox = make_checkbox(name="dominanceCheck", value='ON', checked=self.dominanceChecked, css_classes="checkbox")
+        dominanceText = Span("Dominance Effects ", self.helpButton("Dominance"))
+        dominanceText.add_css_classes("fs12 fwn")
 
-        lrsRadio = HT.Input(type="radio", name="LRSCheck", value='LRS', checked = (self.LRS_LOD == "LRS"))
-        lodRadio = HT.Input(type="radio", name="LRSCheck", value='LOD', checked = (self.LRS_LOD != "LRS"))
-        lrsMaxBox = HT.Input(type="text", name="lrsMax", value=self.lrsMax, size=3)
-        widthBox = HT.Input(type="text", name="graphWidth", size=5, value=str(self.graphWidth))
-        legendBox = HT.Input(type="checkbox", name="viewLegend", value='ON', checked=self.legendChecked, Class="checkbox")
-        legendText = HT.Span("Legend", Class="fs12 fwn")
+        lrsRadio = make_radio_button(name="LRSCheck", value='LRS', checked = (self.LRS_LOD == "LRS"))
+        lodRadio = make_radio_button(name="LRSCheck", value='LOD', checked = (self.LRS_LOD != "LRS"))
+        lrsMaxBox = TextInput(name="lrsMax", value=self.lrsMax)
+        lrsMaxBox.size = 3
+        widthBox = TextInput(name="graphWidth", value=str(self.graphWidth))
+        widthBox.size = 5
+        legendBox = make_checkbox(name="viewLegend", value='ON', checked=self.legendChecked, css_classes="checkbox")
+        legendText = Span("Legend")
+        legendText.add_css_classes("fs12 fwn")
 
-        draw2XBox = HT.Input(type="checkbox", name="draw2X", value='ON', Class="checkbox")
-        draw2XText = HT.Span("2X Plot", Class="fs12 fwn")
+        draw2XBox = make_checkbox(name="draw2X", value='ON', css_classes="checkbox")
+        draw2XText = Span("2X Plot")
+        draw2XText.add_css_classes("fs12 fwn")
 
-        regraphButton = HT.Input(type="button", Class="button", onClick="javascript:databaseFunc(this.form,'showIntMap');", value="Remap")
+        regraphButton = Button("Remap")
+        regraphButton.add_css_classes(="button")
+        regraphButton.set_attribute("onClick", "javascript:databaseFunc(this.form,'showIntMap');")
+
         controlsForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype="multipart/form-data", name="changeViewForm", submit=HT.Input(type='hidden'))
         controlsTable = HT.TableLite(border=0)
         innerControlsTable = HT.TableLite(border=0)
@@ -2661,22 +2754,6 @@ class MarkerRegression(object):
 
         return filename
 
-        # img=HT.Image('/image/'+filename+'.gif',border=0,alt='Histogram of Permutation Test')
-
-        # self.suggestive = self.perm_output[int(self.nperm*0.37-1)]
-        # self.significant = self.perm_output[int(self.nperm*0.95-1)]
-        # self.highlysignificant = self.perm_output[int(self.nperm*0.99-1)]
-
-        # permutationHeading = HT.Paragraph('Histogram of Permutation Test')
-        # permutationHeading.__setattr__("class","title")
-
-        # permutation = HT.TableLite()
-        # permutation.append(HT.TR(HT.TD(img)),
-                           # HT.TR(HT.TD('')),
-                           # HT.TR(HT.TD('Total of %d permutations'%self.nperm)))
-
-        # return permutation
-
     def permutationTextFile(self):
         filename= webqtlUtil.genRandStr("Reg_")
         fpText = open('%s.txt' % (webqtlConfig.TMPDIR+filename), 'wb')
@@ -2745,25 +2822,6 @@ class MarkerRegression(object):
                                                "Mb Start (hg19)",
                                                "Literature Correlation",
                                                "Gene Description"]
-                                               #"PolymiRTS Database" + HT.Href(url='http://compbio.uthsc.edu/miRSNP/', text='>>', target="_blank").__str__(),
-                                               #"Gene Weaver Info Content" + HT.Href(url='http://geneweaver.org/', text='>>', target="_blank").__str__()]
-
-                # gene_tblobj_header = [[THCell(HT.TD('Index', HT.BR(), HT.BR(), align='left', width=50, Class=col_class), text="index", idx=0),
-                        # THCell(HT.TD('Symbol', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="symbol", idx=1),
-                        # THCell(HT.TD('Mb Start',HT.BR(),'(mm9)', align='left', width=100, Class=col_class), text="mb_start_mm9", idx=2),
-                        # THCell(HT.TD('Length (Kb)', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="length", idx=3),
-                        # THCell(HT.TD('SNP',HT.BR(),'Count', align='left', width=47, Class=col_class), text="snp_count", idx=4),
-                        # THCell(HT.TD('SNP',HT.BR(),'Density', align='left', width=78, Class=col_class), text="snp_density", idx=5),
-                        # THCell(HT.TD('Avg',HT.BR(),'Expr', HT.BR(), HT.BR(), align='left', width=44, Class=col_class), sort=0, idx=6),
-                        # THCell(HT.TD('Human',HT.BR(),'Chr', align='left', width=60, Class=col_class), text="human_chr", idx=7),
-                        # THCell(HT.TD('Mb Start',HT.BR(),'(hg19)', align='left', width=100, Class=col_class), text="mb_start_hg19", idx=8),
-                        # THCell(HT.TD('Literature',HT.BR(),'Correlation', align='left', width=100, Class=col_class), text="lit_corr", idx=9),
-                        # THCell(HT.TD('Gene Description', HT.BR(), HT.BR(), align='left', width=290, Class=col_class), text="description", idx=10),
-                        # THCell(HT.TD('PolymiRTS',HT.BR(),'Database', HT.BR(), HT.Href(url='http://compbio.uthsc.edu/miRSNP/', text='>>', target="_blank", Class="normalsize"),
-                                        # align='left', width=100, Class=col_class), sort=0, idx=11),
-                        # THCell(HT.TD('Gene Weaver', HT.BR(), 'Info Content', HT.BR(), HT.Href(url='http://geneweaver.org/', text='>>', target="_blank", Class="normalsize"),
-                                        # align='left', width=110, Class=col_class), sort=0, idx=12),
-                                        # ]]
             else:
                 gene_table_header_list = ["",
                                           "Index",
@@ -2776,25 +2834,6 @@ class MarkerRegression(object):
                                           "Human Chr",
                                           "Mb Start (hg19)",
                                           "Gene Description"]
-                                          #"PolymiRTS Database" + HT.Href(url='http://compbio.uthsc.edu/miRSNP/', text='>>', target="_blank").__str__(),
-                                          #"Gene Weaver Info Content" + HT.Href(url='http://geneweaver.org/', text='>>', target="_blank").__str__()]
-
-                # gene_tblobj_header = [[THCell(HT.TD('Index', HT.BR(), HT.BR(), align='left', width=50, Class=col_class), text="index", idx=0),
-                        # THCell(HT.TD('Symbol', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="symbol", idx=1),
-                        # THCell(HT.TD('Mb Start',HT.BR(),'(mm9)', align='left', width=100, Class=col_class), text="mb_start_mm9", idx=2),
-                        # THCell(HT.TD('Length (Kb)', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="length", idx=3),
-                        # THCell(HT.TD('SNP',HT.BR(),'Count', align='left', width=47, Class=col_class), text="snp_count", idx=4),
-                        # THCell(HT.TD('SNP',HT.BR(),'Density', align='left', width=78, Class=col_class), text="snp_density", idx=5),
-                        # THCell(HT.TD('Avg',HT.BR(),'Expr', HT.BR(), HT.BR(), align='left', width=44, Class=col_class), sort=0, idx=6),
-                        # THCell(HT.TD('Human',HT.BR(),'Chr', align='left', width=60, Class=col_class), text="human_chr", idx=7),
-                        # THCell(HT.TD('Mb Start',HT.BR(),'(hg19)', align='left', width=100, Class=col_class), text="mb_start_hg19", idx=8),
-                        # THCell(HT.TD('Gene Description', HT.BR(), HT.BR(), align='left', width=290, Class=col_class), text="description", idx=9),
-                        # THCell(HT.TD('PolymiRTS',HT.BR(),'Database', HT.BR(), HT.Href(url='http://compbio.uthsc.edu/miRSNP/', text='>>', target="_blank", Class="normalsize"),
-                                        # align='left', width=100, Class=col_class), sort=0, idx=10),
-                        # THCell(HT.TD('Gene Weaver', HT.BR(), 'Info Content', HT.BR(), HT.Href(url='http://geneweaver.org/', text='>>', target="_blank", Class="normalsize"),
-                                        # align='left', width=110, Class=col_class), sort=0, idx=11),
-                                        # ]]
-
         elif self.dataset.group.species == "rat":
 
             gene_table_header_list = ["",
@@ -2808,23 +2847,10 @@ class MarkerRegression(object):
                                       "Human Chr",
                                       "Mb Start (hg19)",
                                       "Gene Description"]
-
-            # gene_tblobj_header = [[THCell(HT.TD('Index', HT.BR(), HT.BR(), align='left', width=50, Class=col_class), text="index", idx=0),
-                    # THCell(HT.TD('Symbol', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="symbol", idx=1),
-                    # THCell(HT.TD('Mb Start',HT.BR(),'(rn3)', align='left', width=100, Class=col_class), text="mb_start_rn3", idx=2),
-                    # THCell(HT.TD('Length (Kb)', HT.BR(), HT.BR(), align='left', width=100, Class=col_class), text="length", idx=3),
-                    # THCell(HT.TD('Avg',HT.BR(),'Expr', HT.BR(), HT.BR(), align='left', width=44, Class=col_class), sort=0, idx=4),
-                    # THCell(HT.TD('Mouse',HT.BR(),'Chr', align='left', width=60, Class=col_class), text="mouse_chr", idx=5),
-                    # THCell(HT.TD('Mb Start',HT.BR(),'(mm9)', align='left', width=100, Class=col_class), text="mb_start_mm9", idx=6),
-                    # THCell(HT.TD('Human',HT.BR(),'Chr', align='left', width=60, Class=col_class), text="human_chr", idx=7),
-                    # THCell(HT.TD('Mb Start',HT.BR(),'(hg19)', align='left', width=100, Class=col_class), text="mb_start_hg19", idx=8),
-                    # THCell(HT.TD('Gene Description', HT.BR(), HT.BR(), align='left', Class=col_class), text="description", idx=9)]]
-
         else:
             pass
 
         return gene_table_header_list
-        #return gene_tblobj_header
 
     def getGeneTableBody(self, geneCol, refGene=None):
 
@@ -2954,23 +2980,6 @@ class MarkerRegression(object):
                                     HT.Href(humanStartString, humanStartDisplay, target="_blank").__str__(),
                                     literatureCorrelationString,
                                     geneDescription]
-                                    #polymiRTS,
-
-
-                        # this_row.append(TDCell(HT.TD(tableIterationsCnt, selectCheck, width=30, align='right', Class=className), tableIterationsCnt, tableIterationsCnt))
-                        # this_row.append(TDCell(HT.TD(HT.Href(geneIdString, theGO["GeneSymbol"], target="_blank"), "&nbsp;", probeSetSearch, align='right', Class=className), theGO["GeneSymbol"], theGO["GeneSymbol"]))
-                        # this_row.append(TDCell(HT.TD(HT.Href(mouseStartString, "%0.6f" % txStart, target="_blank"), align='right', Class=className), str(mouseStartValue), mouseStartValue))
-                        # this_row.append(TDCell(HT.TD(HT.Href("javascript:centerIntervalMapOnRange2('%s', " % theGO["Chromosome"]+str(txStart-tenPercentLength) + ", " + str(txEnd+tenPercentLength) + ", document.changeViewForm)", "%0.3f" % geneLength), align='right', Class=className), "%0.3f" % geneLength, geneLength))
-                        # this_row.append(TDCell(HT.TD(snpString, align='right', Class=className), str(theGO["snpCount"]), theGO["snpCount"]))
-                        # this_row.append(TDCell(HT.TD(snpDensityStr, align='right', Class=className), snpDensityStr, theGO["snpDensity"]))
-                        # this_row.append(TDCell(HT.TD(avgExpr, align='right', Class=className), "--", "--"))
-                        # this_row.append(TDCell(HT.TD(humanChr, align='right', Class=className), humanChr, humanChrSort))
-                        # this_row.append(TDCell(HT.TD(HT.Href(humanStartString, humanStartDisplay, target="_blank"), align='right', Class=className), humanStartDisplay, humanStartValue))
-                        # this_row.append(TDCell(HT.TD(literatureCorrelationString, align='right', Class=className), literatureCorrelationString, literatureCorrelation))
-                        # this_row.append(TDCell(HT.TD(geneDescription, align='right', Class=className), geneDescription, geneDescription))
-                        # this_row.append(TDCell(HT.TD(polymiRTS, align='right', Class=className), "", ""))
-                        # this_row.append(TDCell(HT.TD("", align='right', Class=className), "", ""))
-
                     else:
 
                         this_row = [selectCheck.__str__(),
@@ -2984,25 +2993,8 @@ class MarkerRegression(object):
                                     humanChr,
                                     HT.Href(humanStartString, humanStartDisplay, target="_blank").__str__(),
                                     geneDescription]
-                                    #polymiRTS,
-
-
-                        # this_row.append(TDCell(HT.TD(tableIterationsCnt, selectCheck, width=30, align='right', Class=className), tableIterationsCnt, tableIterationsCnt))
-                        # this_row.append(TDCell(HT.TD(HT.Href(geneIdString, theGO["GeneSymbol"], target="_blank"), "&nbsp;", probeSetSearch, align='right', Class=className), theGO["GeneSymbol"], theGO["GeneSymbol"]))
-                        # this_row.append(TDCell(HT.TD(HT.Href(mouseStartString, "%0.6f" % txStart, target="_blank"), align='right', Class=className), str(mouseStartValue), mouseStartValue))
-                        # this_row.append(TDCell(HT.TD(HT.Href("javascript:centerIntervalMapOnRange2('%s', " % theGO["Chromosome"]+str(txStart-tenPercentLength) + ", " + str(txEnd+tenPercentLength) + ", document.changeViewForm)", "%0.3f" % geneLength), align='right', Class=className), "%0.3f" % geneLength, geneLength))
-                        # this_row.append(TDCell(HT.TD(snpString, align='right', Class=className), str(theGO["snpCount"]), theGO["snpCount"]))
-                        # this_row.append(TDCell(HT.TD(snpDensityStr, align='right', Class=className), snpDensityStr, theGO["snpDensity"]))
-                        # this_row.append(TDCell(HT.TD(avgExpr, align='right', Class=className), "--", "--"))
-                        # this_row.append(TDCell(HT.TD(humanChr, align='right', Class=className), humanChr, humanChrSort))
-                        # this_row.append(TDCell(HT.TD(HT.Href(humanStartString, humanStartDisplay, target="_blank"), align='right', Class=className), humanStartDisplay, humanStartValue))
-                        # this_row.append(TDCell(HT.TD(geneDescription, align='right', Class=className), geneDescription, geneDescription))
-                        # this_row.append(TDCell(HT.TD(polymiRTS, align='right', Class=className), "", ""))
-                        # this_row.append(TDCell(HT.TD("", align='right', Class=className), "", ""))
 
                 gene_table_body.append(this_row)
-                #tblobj_body.append(this_row)
-
         elif self.dataset.group.species == 'rat':
 
             for gIndex, theGO in enumerate(geneCol):
@@ -3068,20 +3060,7 @@ class MarkerRegression(object):
                             humanTxStart,
                             geneDesc]
 
-
-                #this_row.append(TDCell(HT.TD(gIndex + 1, selectCheck, align='left', Class=className), str(gIndex+1), gIndex+1))
-                #this_row.append(TDCell(HT.TD(webqtlSearch, geneSymbolNCBI, align='left', Class=className), theGO["GeneSymbol"], theGO["GeneSymbol"]))
-                #this_row.append(TDCell(HT.TD(theGO["TxStart"], align='left', Class=className), theGO["TxStart"], theGO["TxStart"]))
-                #this_row.append(TDCell(HT.TD(HT.Href(geneLengthURL, "%0.3f" % (geneLength*1000.0)), align='left', Class=className), "%0.3f" % (geneLength*1000.0), (geneLength*1000.0)))
-                #this_row.append(TDCell(HT.TD(avgExprVal, align='left', Class=className), "", ""))
-                #this_row.append(TDCell(HT.TD(mouseChr, align='left', Class=className), mouseChr, mouseChr))
-                #this_row.append(TDCell(HT.TD(mouseTxStart, align='left', Class=className), mouseTxStart, mouseTxStart))
-                #this_row.append(TDCell(HT.TD(humanChr, align='left', Class=className), humanChr, humanChrSort))
-                #this_row.append(TDCell(HT.TD(humanTxStart, align='left', Class=className), humanTxStart, humanTxStart))
-                #this_row.append(TDCell(HT.TD(geneDesc, align='left', Class=className), geneDesc, geneDesc))
-
                 gene_table_body.append(this_row)
-                #tblobj_body.append(this_row)
 
         else:
             pass

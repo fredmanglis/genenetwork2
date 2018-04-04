@@ -9,7 +9,6 @@ import pickle
 import os
 import datetime
 import time
-import pp
 import math
 import collections
 import resource
@@ -20,7 +19,6 @@ from scipy import linalg
 
 from pprint import pformat as pf
 
-from htmlgen import HTMLgen2 as HT
 import reaper
 
 from base.trait import GeneralTrait
