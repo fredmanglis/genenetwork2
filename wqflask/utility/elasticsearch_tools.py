@@ -12,6 +12,7 @@ def test_elasticsearch_connection():
         logger.warning("Elasticsearch is DOWN")
 
 def get_elasticsearch_connection():
+    """Return a connection to ES. Returns None on failure"""
     logger.info("get_elasticsearch_connection")
     es = None
     try:
@@ -24,6 +25,7 @@ def get_elasticsearch_connection():
         es_logger.setLevel(logging.INFO)
         es_logger.addHandler(logging.NullHandler())
     except:
+        logger.error("Failed to get elasticsearch connection")
         es = None
 
     return es
@@ -38,9 +40,7 @@ def get_item_by_unique_column(es, column_name, column_value, index, doc_type):
     item_details = None
     try:
         response = es.search(
-            index = index
-            , doc_type = doc_type
-            , body = {
+            index = index, doc_type = doc_type, body = {
                 "query": { "match": { column_name: column_value } }
             })
         if len(response["hits"]["hits"]) > 0:
