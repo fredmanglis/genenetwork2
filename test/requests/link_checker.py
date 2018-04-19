@@ -53,9 +53,12 @@ def check_page(host, start_url):
     print("Checking links host "+host+" in page `"+start_url+"`")
     doc = parse(start_url).getroot()
     links = get_links(doc)
-
+    in_page_links = filter(is_in_page_link, links)
     internal_links = filter(is_internal_link, links)
     external_links = [x for x in links if not (is_internal_link(x) or is_in_page_link(x))]
+
+    for link in in_page_links:
+        verify_link(start_url+link)
 
     for link in internal_links:
         verify_link(host+link)
