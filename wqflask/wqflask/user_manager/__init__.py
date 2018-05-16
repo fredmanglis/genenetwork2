@@ -9,7 +9,7 @@ import uuid
 import hashlib
 import hmac
 import base64
-import urlparse
+import urllib.parse as urlparse
 
 import simplejson as json
 
