@@ -32,8 +32,7 @@ import math
 import collections
 import resource
 
-import numarray
-import numarray.linear_algebra as la
+import numpy.linalg as la
 import numpy as np
 import scipy
 
@@ -165,7 +164,7 @@ class CorrelationMatrix(object):
                 self.corr_results.append(corr_result_row)
                 self.pca_corr_results.append(pca_corr_result_row)
 
-            corr_result_eigen = la.eigenvectors(numarray.array(self.pca_corr_results))
+            corr_result_eigen = la.eigenvectors(np.array(self.pca_corr_results))
             corr_eigen_value, corr_eigen_vectors = sortEigenVectors(corr_result_eigen)
 
             groups = []

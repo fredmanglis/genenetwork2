@@ -32,8 +32,8 @@ from pprint import pformat as pf
 from math import *
 import random
 import sys, os
-from numarray import linear_algebra as la
-from numarray import ones, array, dot, swapaxes
+from numpy import linalg as la
+from numpy import ones, array, dot, swapaxes
 
 import reaper
 # sys.path.append("..") Never in a running webserver
@@ -835,8 +835,6 @@ def plotBarText(canvas, data, label, variance=None, barColor=pid.blue, axesColor
 #    if fitcurve:
 #        import sys
 #        sys.argv = [ "mod_python" ]
-#        #from numarray import linear_algebra as la
-#        #from numarray import ones, array, dot, swapaxes
 #        fitYY = array(dataYPrimary)
 #        fitXX = array([ones(len(dataXPrimary)),dataXPrimary])
 #        AA = dot(fitXX,swapaxes(fitXX,0,1))
@@ -1029,8 +1027,6 @@ def plotXYSVG(drawSpace, dataX, dataY, rank=0, dataLabel=[], plotColor = "black"
 
     if fitcurve:
         sys.argv = [ "mod_python" ]
-        #from numarray import linear_algebra as la
-        #from numarray import ones, array, dot, swapaxes
         fitYY = array(dataYPrimary)
         fitXX = array([ones(len(dataXPrimary)),dataXPrimary])
         AA = dot(fitXX,swapaxes(fitXX,0,1))
