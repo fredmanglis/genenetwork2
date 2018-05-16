@@ -2572,7 +2572,7 @@ class MarkerRegression(object):
 
         showSNPCheck = make_checkbox(name='showSNP', value='ON', checked=self.SNPChecked, css_classes='checkbox')
         showSNPText = Span('SNP Track ', self.helpButton("snpSeismograph"))
-        showSNPText.add_css_classes(="fs12 fwn")
+        showSNPText.add_css_classes("fs12 fwn")
 
         showGenesCheck = make_checkbox(name='showGenes', value='ON', checked = self.geneChecked, css_classes='checkbox')
         showGenesText  = Span('Gene Track')
@@ -2630,7 +2630,7 @@ class MarkerRegression(object):
         draw2XText.add_css_classes("fs12 fwn")
 
         regraphButton = Button("Remap")
-        regraphButton.add_css_classes(="button")
+        regraphButton.add_css_classes("button")
         regraphButton.set_attribute("onClick", "javascript:databaseFunc(this.form,'showIntMap');")
 
         controlsForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype="multipart/form-data", name="changeViewForm", submit=HT.Input(type='hidden'))
