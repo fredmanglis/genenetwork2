@@ -123,7 +123,7 @@ def plotBoxPlot(vals):
     img=Image('/image/'+filename+'.gif')
     img.set_attribute("border", "0")
 
-    boxPlotLink = Link(url="http://davidmlane.com/hyperstat/A37797.html", "Box Plots")
+    boxPlotLink = Link(url="http://davidmlane.com/hyperstat/A37797.html", content="Box Plots")
     boxPlotLink.set_attribute("target", "_blank")
     boxPlotLink.add_css_classes("fs13")
     plotLink = Span("More about ", boxPlotLink)
