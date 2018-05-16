@@ -31,7 +31,8 @@ import base64
 import array
 import sqlalchemy
 from wqflask import app
-from flask import g, Response, request, make_response, render_template, send_from_directory, jsonify, redirect
+from flask import (g, Response, request, make_response, render_template,
+                   send_from_directory, jsonify, redirect, session)
 from wqflask import search_results
 from wqflask import export_traits
 from wqflask import gsearch
@@ -68,6 +69,8 @@ from wqflask import collect
 from wqflask.database import db_session
 
 import werkzeug
+
+from wqflask.collect import get_collections_by_user_key
 
 import utility.logger
 logger = utility.logger.getLogger(__name__ )
@@ -115,14 +118,21 @@ def handle_bad_request(e):
 def index_page():
     logger.info("Sending index_page")
     logger.info(request.url)
+
     params = request.args
     if 'import_collections' in params:
         import_collections = params['import_collections']
         if import_collections == "true":
             g.cookie_session.import_traits_to_user()
+
+    if session.get("user", None):
+        g.num_collections = len(
+            get_collections_by_user_key(session["user"]["user_id"]))
+
     if USE_GN_SERVER:
         # The menu is generated using GN_SERVER
-        return render_template("index_page.html", gn_server_url = GN_SERVER_URL, version=GN_VERSION)
+        return render_template("index_page.html", gn_server_url = GN_SERVER_URL,
+                               version=GN_VERSION)
     else:
         # Old style static menu (OBSOLETE)
         return render_template("index_page_orig.html", version=GN_VERSION)

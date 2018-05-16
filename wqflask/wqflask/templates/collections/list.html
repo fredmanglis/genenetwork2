@@ -51,7 +51,7 @@
             <tbody>
             {% for uc in collections %}
                 <tr class="collection_line">
-                    {% if g.user_session.user_ob %}
+                    {% if session.get("user", None) %}
                     <td style="padding-left: 8px; padding-right: 0px; padding-top: 4px; align: center;"><INPUT TYPE="checkbox" NAME="collection" class="checkbox trait_checkbox" VALUE="{{ uc.id }}"></td>
                     {% else %}
                     <td style="padding-left: 8px; padding-right: 0px; padding-top: 4px; align: center;"><INPUT TYPE="checkbox" NAME="collection" class="checkbox trait_checkbox" VALUE="{{ uc.name }}"></td>
@@ -62,8 +62,8 @@
                     {% else %}
                     <td><a class="collection_name" href="{{ url_for('view_collection', collection_id=uc.id) }}">{{ uc.name }}</a></td>
                     {% endif %}
-                    <td>{{ timeago(uc.created_timestamp.isoformat() + "Z") }}</td>
-                    <td>{{ timeago(uc.changed_timestamp.isoformat() + "Z") }}</td>
+		    <td>{{ timeago(datetime.strptime(uc.created_timestamp, '%b %d %Y %I:%M%p').isoformat() + "Z") }}</td>
+		    <td>{{ timeago(datetime.strptime(uc.changed_timestamp, '%b %d %Y %I:%M%p').isoformat() + "Z") }}</td>
                     <td align="right">{{ uc.num_members }}</td>
                 </tr>
             {% endfor %}
