@@ -1,6 +1,5 @@
 
 
-import operator
 import csv
 import xlsxwriter
 import io 

@@ -23,7 +23,6 @@
 import sys
 # sys.path.append(".")   Never do this in a webserver!
 
-import gc
 import string
 import pickle
 import os

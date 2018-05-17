@@ -1,7 +1,5 @@
 
 
-import operator
-
 import simplejson as json
 
 from pprint import pformat as pf

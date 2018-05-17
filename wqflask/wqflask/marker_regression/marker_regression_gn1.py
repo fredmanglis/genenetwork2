@@ -29,8 +29,8 @@ import string
 from math import *
 import piddle as pid
 import sys,os
-import pickle
-import http.client, urllib.request, urllib.parse, urllib.error
+import cPickle
+import httplib
 
 from flask import Flask, g
 
@@ -80,7 +80,6 @@ def make_radio_button(name, value, checked=False):
 #########################################
 class MarkerRegression(object):
     cMGraphInterval = 5
-    maxBootStrap = 50
     GRAPH_MIN_WIDTH = 900
     GRAPH_MAX_WIDTH = 10000 # Don't set this too high
     GRAPH_DEFAULT_WIDTH = 1280
@@ -109,12 +108,7 @@ class MarkerRegression(object):
     DRAW_DETAIL_MB = 4
     DRAW_UTR_LABELS_MB = 4
 
-    MIN_PIXELS_BETWEEN_LABELS = 50
-
-    qmarkImg = Image('/images/qmarkBoxBlue.gif', alternate_text='Glossary')
-    qmarkImg.set_attribute("width", "10")
-    qmarkImg.set_attribute("height", "13")
-    qmarkImg.set_attribute("border", "0")
+    qmarkImg = HT.Image('/images/qmarkBoxBlue.gif', width=10, height=13, border=0, alt='Glossary')
     # Note that "qmark.gif" is a similar, smaller, rounded-edges question mark. It doesn't look
     # like the ones on the image, though, which is why we don't use it here.
 
@@ -124,10 +118,7 @@ class MarkerRegression(object):
     NR_INDIVIDUALS = 0
     ## END HaplotypeAnalyst
 
-    ALEX_DEBUG_BOOL_COLORIZE_GENES = 1 # 0=don't colorize, 1=colorize
     ALEX_DEBUG_BOOL_PRINT_GENE_LIST = 1
-
-    kWIDTH_DEFAULT=1
 
     kONE_MILLION = 1000000
 
@@ -136,18 +127,14 @@ class MarkerRegression(object):
     SNP_COLOR           = pid.orange # Color for the SNP "seismograph"
     TRANSCRIPT_LOCATION_COLOR = pid.mediumpurple
 
-    GENE_FILL_COLOR     = pid.HexColor(0x6666FF)
-    GENE_OUTLINE_COLOR  = pid.HexColor(0x000077)
     BOOTSTRAP_BOX_COLOR = pid.yellow
     LRS_COLOR           = pid.HexColor(0x0000FF)
-    LRS_LINE_WIDTH = 2
     SIGNIFICANT_COLOR   = pid.HexColor(0xEBC7C7)
     SUGGESTIVE_COLOR    = pid.gainsboro
     SIGNIFICANT_WIDTH = 5
     SUGGESTIVE_WIDTH = 5
     ADDITIVE_COLOR_POSITIVE = pid.green
     ADDITIVE_COLOR_NEGATIVE = pid.orange
-    ADDITIVE_COLOR = ADDITIVE_COLOR_POSITIVE
     DOMINANCE_COLOR_POSITIVE = pid.darkviolet
     DOMINANCE_COLOR_NEGATIVE = pid.red
 
@@ -158,15 +145,7 @@ class MarkerRegression(object):
     HAPLOTYPE_RECOMBINATION = pid.darkgray
     ## END HaplotypeAnalyst
 
-    QMARK_EDGE_COLOR    = pid.HexColor(0x718118)
-    QMARK_FILL_COLOR    = pid.HexColor(0xDEE3BB)
-
     TOP_RIGHT_INFO_COLOR = pid.black
-    X_AXIS_LABEL_COLOR  = pid.black #HexColor(0x505050)
-
-    MINI_VIEW_MAGNIFIED_REGION_COLOR = pid.HexColor(0xCC0000)
-    MINI_VIEW_OUTSIDE_REGION_COLOR   = pid.HexColor(0xEEEEEE)
-    MINI_VIEW_BORDER_COLOR           = pid.black
 
     CLICKABLE_WEBQTL_REGION_COLOR     = pid.HexColor(0xF5D3D3)
     CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR = pid.HexColor(0xFCE9E9)
@@ -185,17 +164,8 @@ class MarkerRegression(object):
 
     HELP_PAGE_REF = '/glossary.html'
 
-    DRAW_UTR_LABELS=0
-
     def __init__(self, start_vars):
-
-        #templatePage.__init__(self, fd)
-
-        #if not self.openMysql():
-        #    return
         logger.info("Running qtlreaper")
-
-        #helper_functions.get_species_dataset_trait(self, start_vars)
 
         self.temp_uuid = start_vars['temp_uuid']
 
@@ -221,28 +191,12 @@ class MarkerRegression(object):
             self.js_data = start_vars['js_data']
         self.trimmed_markers = start_vars['trimmed_markers'] #Top markers to display in table
 
-        #ZS: Think I can just get all this from dataset object now
-        #RISet and Species
-        #if not fd.genotype:
-        #    fd.readGenotype()
-        #
-        #fd.parentsf14regression = fd.formdata.getvalue('parentsf14regression')
-        #
-        #if ((fd.parentsf14regression == 'on') and fd.genotype_2):
-        #    fd.genotype = fd.genotype_2
-        #else:
-        #    fd.genotype = fd.genotype_1
-        #fd.strainlist = list(fd.genotype.prgy)
-        #
-        #self.species = webqtlDatabaseFunction.retrieveSpecies(cursor=self.cursor, RISet=fd.RISet)
-
         if self.dataset.group.species == "rat":
             self._ucscDb = "rn3"
         elif self.dataset.group.species == "mouse":
             self._ucscDb = "mm9"
         else:
             self._ucscDb = ""
-
 
         #####################################
         # Options
@@ -296,17 +250,7 @@ class MarkerRegression(object):
         if 'use_loco' in list(start_vars.keys()):
             self.use_loco = start_vars['use_loco']
 
-        #try:
         self.selectedChr = int(start_vars['selected_chr'])
-        #except:
-        #    self.selectedChr = -1
-
-        #whether include parents and F1 for InbredSet
-        #fd.parentsf14regression = fd.formdata.getvalue('parentsf14regression')
-        #if ((fd.parentsf14regression == 'on') and fd.genotype_2):
-        #    fd.genotype = fd.genotype_2
-        #else:
-        #    fd.genotype = fd.genotype_1
 
         self.strainlist = self.dataset.group.samplelist
         self.genotype = self.dataset.group.read_genotype_file()
@@ -326,8 +270,7 @@ class MarkerRegression(object):
                self.graphWidth  = self.MULT_GRAPH_DEFAULT_WIDTH
 
 ## BEGIN HaplotypeAnalyst
-        #self.haplotypeAnalystChecked = fd.formdata.getvalue('haplotypeAnalystCheck')
-        if 'haplotypeAnalystCheck' in list(start_vars.keys()):
+        if 'haplotypeAnalystCheck' in start_vars.keys():
             self.haplotypeAnalystChecked = start_vars['haplotypeAnalystCheck']
         else:
             self.haplotypeAnalystChecked = False
@@ -339,7 +282,6 @@ class MarkerRegression(object):
             self.LRS_LOD = start_vars['LRSCheck']
         else:
             self.LRS_LOD = start_vars['score_type']
-        self.cutoff = start_vars['cutoff']
         self.intervalAnalystChecked = True
         self.draw2X = False
         if 'additiveCheck' in list(start_vars.keys()):
@@ -371,34 +313,8 @@ class MarkerRegression(object):
         except:
             self.lrsMax = 0
 
-        #self.additiveChecked = fd.formdata.getvalue('additiveCheck')
-        #self.dominanceChecked = fd.formdata.getvalue('dominanceCheck')
-        #self.LRS_LOD = fd.formdata.getvalue('LRSCheck', 'LRS')
-        #self.intervalAnalystChecked = fd.formdata.getvalue('intervalAnalystCheck')
-        #self.legendChecked = fd.formdata.getvalue('viewLegend')
-        #self.geneChecked = fd.formdata.getvalue('showGenes')
-        #self.SNPChecked  = fd.formdata.getvalue('showSNP')
-        #self.draw2X = fd.formdata.getvalue('draw2X')
-        #self.lrsMax = float(fd.formdata.getvalue('lrsMax', 0))
-        #self.startMb = fd.formdata.getvalue('startMb', "-1")
-        #self.endMb = fd.formdata.getvalue('endMb', "-1")
-
-        #try:
-        #    self.startMb = float(self.startMb)
-        #    self.endMb = float(self.endMb)
-        #    if self.startMb > self.endMb:
-        #        temp = self.startMb
-        #        self.startMb = self.endMb
-        #        self.endMb = temp
-        #    #minimal distance 10bp
-        #    if self.endMb - self.startMb < 0.00001:
-        #        self.endMb = self.startMb + 0.00001
-        #except:
-        #    self.startMb = self.endMb = -1
-
         #Trait Infos
         self.identification = ""
-        #self.identification = fd.formdata.getvalue('identification', "")
 
         ################################################################
         # Generate Chr list and Retrieve Length Information
@@ -437,50 +353,9 @@ class MarkerRegression(object):
         else:
             self.GraphInterval = self.cMGraphInterval #cM
 
-        ################################################################
-        # Get Trait Values and Infomation
-        ################################################################
-        ##input from search page or selection page
-        #self.searchResult = fd.formdata.getvalue('searchResult')
-        ##convert single selection into a list
-        #if type("1") == type(self.searchResult):
-        #    self.searchResult = string.split(self.searchResult,'\t')
-        #
-        #self.traitList = []
-        #if self.searchResult and len(self.searchResult) > webqtlConfig.MULTIPLEMAPPINGLIMIT:
-        #    heading = 'Multiple Interval Mapping'
-        #    detail = ['In order to get clear result, do not select more than %d traits for \
-        #            Multiple Interval Mapping analysis.' % webqtlConfig.MULTIPLEMAPPINGLIMIT]
-        #    self.error(heading=heading,detail=detail)
-        #    return
-        #elif self.searchResult:
-        #    self.dataSource = 'selectionPage'
-        #    for item in self.searchResult:
-        #        thisTrait = webqtlTrait(fullname=item, cursor=self.cursor)
-        #        thisTrait.retrieveInfo()
-        #        thisTrait.retrieveData(fd.strainlist)
-        #        self.traitList.append(thisTrait)
-        #else:
-
-        #input from data editing page
-        #fd.readData()
-        #if not fd.allTraitData:
-        #    heading = "Mapping"
-        #    detail = ['No trait data was selected for %s data set. No mapping attempted.' % fd.RISet]
-        #    self.error(heading=heading,detail=detail)
-        #    return
-
-        self.dataSource = 'editingPage'
         self.traitList = []
         thisTrait = start_vars['this_trait']
-        #fullname = fd.formdata.getvalue('fullname', '')
-        #if fullname:
-        #    thisTrait = webqtlTrait(fullname=fullname, data=fd.allTraitData, cursor=self.cursor)
-        #    thisTrait.retrieveInfo()
-        #else:
-        #    thisTrait = webqtlTrait(data=fd.allTraitData)
         self.traitList.append(thisTrait)
-
 
 ## BEGIN HaplotypeAnalyst
 ## count the amount of individuals to be plotted, and increase self.graphHeight
@@ -499,8 +374,6 @@ class MarkerRegression(object):
                        self.NR_INDIVIDUALS = self.NR_INDIVIDUALS + 1
 # default:
            self.graphHeight = self.graphHeight + 2 * (self.NR_INDIVIDUALS+10) * self.EACH_GENE_HEIGHT
-## for paper:
-        #    #self.graphHeight = self.graphHeight + 1 * self.NR_INDIVIDUALS * self.EACH_GENE_HEIGHT - 180
 ## END HaplotypeAnalyst
 
         ################################################################
@@ -508,12 +381,6 @@ class MarkerRegression(object):
         ################################################################
         self.multipleInterval = len(self.traitList) > 1
         self.qtlresults = start_vars['qtl_results']
-        #errorMessage = self.calculateAllResult(fd)
-        #if errorMessage:
-        #    heading = "Mapping"
-        #    detail = ['%s' % errorMessage]
-        #    self.error(heading=heading,detail=detail)
-        #    return
 
         if self.multipleInterval:
             self.colorCollection = Plot.colorSpectrum(len(self.qtlresults))
@@ -542,9 +409,6 @@ class MarkerRegression(object):
 
         for i, strain in enumerate(self.diffCol):
             self.diffCol[i] = g.db.execute("select Id from Strain where Symbol = %s", strain).fetchone()[0]
-            #self.cursor.execute("select Id from Strain where Symbol = %s", strain)
-            #self.diffCol[i] = self.cursor.fetchone()[0]
-        #print self.diffCol
 
         ################################################################
         # GeneCollection goes here
@@ -567,13 +431,13 @@ class MarkerRegression(object):
                     chrName = "X"
                 else:
                     chrName = self.selectedChr
-                self.geneCol = GeneUtil.loadGenes(chrName, self.diffCol, self.startMb, self.endMb, webqtldatabase, "mouse")
+                self.geneCol = GeneUtil.loadGenes(chrName, self.diffCol, self.startMb, self.endMb, "mouse")
             elif self.dataset.group.species == "rat":
                 if self.selectedChr == 21:
                     chrName = "X"
                 else:
                     chrName = self.selectedChr
-                self.geneCol = GeneUtil.loadGenes(chrName, self.diffCol, self.startMb, self.endMb, webqtldatabase, "rat")
+                self.geneCol = GeneUtil.loadGenes(chrName, self.diffCol, self.startMb, self.endMb, "rat")
 
             if self.geneCol and self.intervalAnalystChecked:
                #######################################################################
@@ -582,20 +446,13 @@ class MarkerRegression(object):
                #through set GENEID is None                                           #
                #######################################################################
 
-               #GENEID = fd.formdata.getvalue('GeneId') or None
                GENEID = None
 
-               geneTableContainer = Division() #Div to hold table
-               geneTableContainer.id = "sortable"
                self.geneTable(self.geneCol, GENEID)
-
 
         ################################################################
         # Plots goes here
         ################################################################
-        #if self.plotScale != 'physic' or self.multipleInterval:
-        #    showLocusForm =  webqtlUtil.genRandStr("fm_")
-        #else:
         showLocusForm = ""
         intCanvas = pid.PILCanvas(size=(self.graphWidth, self.graphHeight))
         gifmap = self.plotIntMapping(intCanvas, startMb = self.startMb, endMb = self.endMb, showLocusForm= showLocusForm)
@@ -613,11 +470,6 @@ class MarkerRegression(object):
             intCanvasX2 = pid.PILCanvas(size=(self.graphWidth*2,self.graphHeight*2))
             gifmapX2 = self.plotIntMapping(intCanvasX2, startMb = self.startMb, endMb = self.endMb, showLocusForm= showLocusForm, zoom=2)
             intCanvasX2.save(os.path.join(webqtlConfig.GENERATED_IMAGE_DIR, self.filename+"X2"), format='png')
-
-        ################################################################
-        # Info tables goes here
-        ################################################################
-
 
         ################################################################
         # Outputs goes here
@@ -639,205 +491,14 @@ class MarkerRegression(object):
 
         if (self.permChecked and self.nperm > 0) and not (self.multipleInterval and 0 < self.nperm):
             self.perm_filename = self.drawPermutationHistogram()
-            #perm_text_file = self.permutationTextFile()
 
         ################################################################
         # footnote goes here
         ################################################################
-        btminfo = Paragraph() #Small('More information about this graph is available here.')
-        btminfo.id = "smallsize"
+        btminfo = HT.Paragraph(Id="smallsize") #Small('More information about this graph is available here.')
 
         if self.traitList and self.traitList[0].dataset and self.traitList[0].dataset.type == 'Geno':
-            btminfo.append(LineBreak())
-            btminfo.append('Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
-
-        gifmapBq = Element("blockquote")
-        gitmapBq.append(gifmap)
-        gitmapBq.append(showLocusForm)
-        gitmapBq.append(Paragraph())
-        gitmapBq.append(btminfo)
-        gitmapBq.set_attribute("bgColor", '#eeeeee')
-        gitmapBq.set_attribute("height", "200")
-        TD_LR = TableCell(gifmapBq)
-
-        if geneTable:
-            iaForm = Form("POST", cgi= os.path.join(webqtlConfig.CGIDIR, "main.py?FormID=intervalAnalyst"))
-            iaForm.multipart = True
-            iaForm.set_attribute("name", "iaForm")
-            iaForm.append(HiddenInput(name='changeThis', value=""))
-            hddn = {'chromosome':self.genotype[0].name, 'species':self.species,'startMb':self.startMb,'endMb':self.endMb}
-            if self.diffCol:
-                hddn['s1'] = self.diffCol[0]
-                hddn['s2'] = self.diffCol[1]
-            for key in list(hddn.keys()):
-                iaForm.append(HiddenInput(name=key, value=hddn[key]))
-            subTitleBtn = Button("Customize")
-            subTitleBtn.set_attribute("name", 'customize')
-            subTitleBtn.set_attribute("onClick", "formInNewWindow(this.form);")
-            subTitleBtn.add_css_classes("button")
-            subTitlePara = Paragraph("Interval Analyst : Chr %s from %2.6f to %2.6f Mb" % (self.genotype[0].name, self.startMb, self.endMb))
-            subTitlePara.add_css_classes("subtitle")
-            iaForm.append(subTitlePara)
-            formBq = Element("blockquote")
-            formBq.append(iaForm)
-            TD_LR.append(formBq)
-            # optionsTable
-            selectall = Link(url="#redirect")
-            selectall.set_attribute("onClick", "checkAll(document.getElementsByName('%s')[0]);" % mainfmName)
-            selectall_img = Image("/images/select_all2_final.jpg", alternate_text="Select All")
-            selectall_img.title="Select All"
-            selectall_img.set_attribute("name", "selectall")
-            selectall_img.set_attribute("style", "border:none;")
-            selectall.append(selectall_img)
-
-            reset = Link(url="#redirect")
-            reset.set_attribute("onClick", "checkNone(document.getElementsByName('%s')[0]); return false;" % mainfmName)
-            reset_img = Image("/images/select_none2_final.jpg", alternate_text="Select None")
-            reset_img.title="Select None"
-            reset_img.set_attribute("style", "border:none;")
-            reset.append(reset_img)
-
-            selectinvert = Link(url="#redirect")
-            selectinvert_img.title="Invert Selection"
-            selectinvert.set_attribute("onClick", "checkInvert(document.getElementsByName('%s')[0]);" % mainfmName)
-            selectinvert_img = Image("/images/invert_selection2_final.jpg", alternate_text="Invert Selection")
-            selectinvert_img.set_attribute("name", "selectinvert")
-            selectinvert_img.set_attribute("style", "border:none;")
-            selectinvert.append(selectinvert_img)
-
-            addselect = Link(url="#redirect")
-            addselect.set_attribute("onClick", "addRmvSelection('%s', document.getElementsByName('%s')[0], 'addToSelection');" % (RISet, mainfmName))
-            addselect_img = Image("/images/add_collection1_final.jpg", alternate_text="Add To Collection")
-            addselect_img.title="Add To Collection"
-            addselect_img.set_attribute("name", "addselect")
-            addselect_img.set_attribute("style", "border:none;")
-            addselect.append(addselect_img)
-
-            geneweaver = Link(url="#redirect")
-            geneweaver.set_attribute("onClick", "databaseFunc(document.getElementsByName('%s')[0], 'ODEIM');" % mainfmName)
-            geneweaver_img = Image("/images/ODE_logo_final.jpg", alternate_text="Gene Weaver")
-            geneweaver_img.title="Gene Weaver"
-            geneweaver_img.set_attribute("name", "GeneWeaver")
-            geneweaver_img.set_attribute("style", "border:none")
-            geneweaver.append(geneweaver_img)
-
-            optionsTable = Table()
-            row = optionsTable.create_row()
-            cell = row.create_cell(selectall)
-            cell.set_attribute("width", "77")
-            cell.set_attribute("style", "text-align:center")
-            cell2 = row.create_cell(reset)
-            cell2.set_attribute("width", "77")
-            cell2.set_attribute("style", "text-align:center")
-            cell3 = row.create_cell(selectinvert)
-            cell3.set_attribute("width", "77")
-            cell3.set_attribute("style", "text-align:center")
-            cell4 = row.create_cell(geneweaver)
-            cell4.set_attribute("width", "77")
-            cell4.set_attribute("style", "text-align:center")
-
-            row2 = optionsTable.create_row()
-            cell5 = row2.create_cell("Select")
-            cell5.set_attribute("style", "text-align:center")
-            cell6 = row2.create_cell("Deselect")
-            cell6.set_attribute("style", "text-align:center")
-            cell7 = row2.create_cell("Invert")
-            cell7.set_attribute("style", "text-align:center")
-            cell8 = row2.create_cell("Gene Weaver")
-            cell8.set_attribute("style", "text-align:center")
-
-            tableBq = Element("blockquote")
-            tableBq.append(optionsTable)
-            TD_LR.append(tableBq)
-            # geneTableContainer
-            tableFormBq = Element("blockquote")
-            tableFormBq.append(tableForm)
-            TD_LR.append(tableFormBq)
-
-        self.body = TD_LR
-
-        #self.dict['body'] = TD_LR
-        #self.dict['title'] = "Mapping"
-
-
-    def writeQTL2Text(self, filename):
-        if self.multipleInterval:
-            return ""
-        #_dominance = (self.genotype.type == 'intercross')
-        _Mb = self.genotype.Mbmap
-
-        ###Write to text file
-        fpText = open(os.path.join(webqtlConfig.TMPDIR, filename) + '.txt','wb')
-
-        fpText.write("Source: WebQTL, The GeneNetwork (%s)\n" % webqtlConfig.PORTADDR)
-        #
-        fpText.write("Site: GN\n")
-        fpText.write("Page: Map Viewer\n")
-        fpText.write(time.strftime("Date and Time (US Center): %b %d, %Y at %I.%M %p\n", time.localtime()))
-        fpText.write("Trait ID: %s\n" % self.this_trait.name)
-        fpText.write("Suggestive LRS = %0.2f\n" % self.suggestive)
-        fpText.write("Significant LRS = %0.2f\n" % self.significant)
-        """
-        if self.this_trait.symbol and self.this_trait.chr and self.this_trait.mb:
-                writeSymbol, writeChromosome, writeMb = self.this_trait.symbol, self.this_trait.chr, self.this_trait.mb
-        else:
-                writeSymbol, writeChromosome, writeMb = (" ", " ", " ")
-        fpText.write("Gene Symbol: %s\n" % writeSymbol)
-        fpText.write("Location: Chr %s @ %s Mb\n" % (writeChromosome, writeMb))
-        #selectedChr = self.indexToChrName(int(fd.formdata.getvalue('chromosomes', -1)))
-        #fpText.write("Chromosome: %s\n" % selectedChr)
-        fpText.write("Region: %0.6f-%0.6f Mb\n\n" % (self.startMb, self.endMb))
-        """
-
-        if hasattr(self, 'LRSArray'):
-            if _dominance:
-                fpText.write('Chr\tLocus\tcM\tMb\tLRS\tP-value\tAdditive\tDominance\n')
-            else:
-                fpText.write('Chr\tLocus\tcM\tMb\tLRS\tP-value\tAdditive\n')
-        else:
-            if _dominance:
-                fpText.write('Chr\tLocus\tcM\tMb\tLRS\tAdditive\tDominance\n')
-            else:
-                fpText.write('Chr\tLocus\tcM\tMb\tLRS\tAdditive\n')
-
-        i = 0
-        for marker in self.qtlresults:
-            if _Mb:
-                locusMb = '%2.3f' % marker['Mb']
-            else:
-                locusMb = 'N/A'
-
-            if hasattr(self, 'LRSArray'):
-                if start_vars['score_type'] == "LRS":
-                    lrs_lod = marker['lrs_value']
-                else:
-                    lrs_lod = marker['lod_score']
-
-                P_value = self.calculatePValue(lrs_lod, self.perm_output)
-
-                #if _dominance:
-                #    fpText.write("%s\t%s\t%2.3f\t%s\t%2.3f\t%2.3f\t%2.3f\t%2.3f\n" %(qtlresult.locus.chr, \
-                #            qtlresult.locus.name, qtlresult.locus.cM, locusMb , qtlresult.lrs, P_value,  qtlresult.additive, qtlresult.dominance))
-                #else:
-                if P_value:
-                    fpText.write("%s\t%s\t%2.3f\t%s\t%2.3f\t%2.3f\n" %(marker['chr'], \
-                        marker['name'], marker['cM'], locusMb, lrs_lod, P_value))
-                else:
-                    fpText.write("%s\t%s\t%2.3f\t%s\t%2.3f\t%s\n" %(marker['chr'], \
-                        marker['name'], marker['cM'], locusMb , lrs_lod, '-'))
-            else:
-                #if _dominance:
-                #    fpText.write("%s\t%s\t%2.3f\t%s\t%2.3f\t%2.3f\t%2.3f\n" %(qtlresult.locus.chr, \
-                #            qtlresult.locus.name, qtlresult.locus.cM, locusMb , qtlresult.lrs, qtlresult.additive, qtlresult.dominance))
-                #else:
-                fpText.write("%s\t%s\t%2.3f\t%s\t%2.3f\n" %(marker['chr'], \
-                        marker['name'], marker['cM'], locusMb , lrs_lod))
-
-            i += 1
-
-        fpText.close()
-        textUrl = '/tmp/'+filename+'.txt'
-        return textUrl
+            btminfo.append(HT.BR(), 'Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
 
     def plotIntMapping(self, canvas, offset= (80, 120, 20, 100), zoom = 1, startMb = None, endMb = None, showLocusForm = ""):
         #calculating margins
@@ -865,8 +526,6 @@ class MarkerRegression(object):
         cHeight = canvas.size[1]
         plotWidth = cWidth - xLeftOffset - xRightOffset
         plotHeight = cHeight - yTopOffset - yBottomOffset
-        startPixelX = xLeftOffset
-        endPixelX   = (xLeftOffset + plotWidth)
 
         #Drawing Area Height
         drawAreaHeight = plotHeight
@@ -889,9 +548,7 @@ class MarkerRegression(object):
             drawAreaHeight -= 60
 
         #Image map
-        gifmap = Element("map")
-        gifmap.set_attribute("name", "WebQTLImageMap")
-        #gifmap = None
+        gifmap = HT.Map(name = "WebQTLImageMap")
 
         newoffset = (xLeftOffset, xRightOffset, yTopOffset, yBottomOffset)
         # Draw the alternating-color background first and get plotXScale
@@ -1070,15 +727,6 @@ class MarkerRegression(object):
             this_chr = str(self.ChrList[self.selectedChr][0])
         else:
             this_chr = str(self.ChrList[self.selectedChr][1]+1)
-        # for i, qtlresult in enumerate(self.qtlresults):
-            # if Chr == this_chr:
-                # if Mb < self.startMb or Mb > self.endMb:
-                    # return
-                # else:
-                    # locPixel = xLeftOffset + (Mb-self.startMb)*plotXScale
-                    # break
-            # elif self.selectedChr == -1: 
-                # if str(qtlresult['chr']) != Chr:
 
         if self.plotScale == 'physic':
             if self.selectedChr > -1:
@@ -1136,7 +784,6 @@ class MarkerRegression(object):
             canvas.drawPolygon(((leftOffset+6, startPosY-6), (leftOffset, startPosY+6), (leftOffset+12, startPosY+6)), edgeColor=pid.black, fillColor=self.TRANSCRIPT_LOCATION_COLOR, closed=1)
             canvas.drawString("Sequence Site", (leftOffset+15), (startPosY+5), smallLabelFont, self.TOP_RIGHT_INFO_COLOR)
 
-
     def drawSNPTrackNew(self, canvas, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
         if self.plotScale != 'physic' or self.selectedChr == -1 or not self.diffCol:
             return
@@ -1176,7 +823,7 @@ class MarkerRegression(object):
                     snpDensity = float(SNPCounts[i-xLeftOffset]*SNP_HEIGHT_MODIFIER/maxCount)
                     canvas.drawLine(i, drawSNPLocationY+(snpDensity)*zoom, i, drawSNPLocationY-(snpDensity)*zoom, color=self.SNP_COLOR, width=1)
 
-    def drawMultiTraitName(self, fd, canvas, gifmap, showLocusForm, offset= (40, 120, 80, 10), zoom = 1, locLocation= None):
+    def drawMultiTraitName(self, fd, canvas, gifmap, showLocusForm, offset= (40, 120, 80, 10), zoom = 1):
         nameWidths = []
         yPaddingTop = 10
         colorFont=pid.Font(ttf="trebuc",size=12,bold=1)
@@ -1204,13 +851,11 @@ class MarkerRegression(object):
             canvas.drawRect(rightShift,yPaddingTop+kstep*15, rectWidth+rightShift,yPaddingTop+10+kstep*15, fillColor=thisLRSColor)
             canvas.drawString(name,rectWidth+2+rightShift,yPaddingTop+10+kstep*15,font=colorFont,color=pid.black)
             if thisTrait.db:
-
                 COORDS = "%d,%d,%d,%d" %(rectWidth+2+rightShift,yPaddingTop+kstep*15,rectWidth+2+rightShift+nameWidth,yPaddingTop+10+kstep*15,)
                 HREF= "javascript:showDatabase3('%s','%s','%s','');" % (showLocusForm, thisTrait.db.name, thisTrait.name)
                 gifmap.areas.append(make_map_area(shape='rect', coords=COORDS, href=HREF))
 
-
-    def drawLegendPanel(self, canvas, offset= (40, 120, 80, 10), zoom = 1, locLocation= None):
+    def drawLegendPanel(self, canvas, offset= (40, 120, 80, 10), zoom = 1):
         xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
         plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
         plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
@@ -1254,31 +899,43 @@ class MarkerRegression(object):
             startPosX = xLeftOffset
             canvas.drawLine(startPosX, startPosY, startPosX + 32, startPosY, color=self.SIGNIFICANT_COLOR, width=self.SIGNIFICANT_WIDTH)
             canvas.drawLine(startPosX, startPosY + stepPosY, startPosX + 32, startPosY + stepPosY, color=self.SUGGESTIVE_COLOR, width=self.SUGGESTIVE_WIDTH)
-            lod = 1
-            if self.LRS_LOD == 'LOD':
-                lod = self.LODFACTOR
             canvas.drawString('Significant %s = %2.2f' % (self.LRS_LOD, self.significant),xLeftOffset+42,startPosY +5,font=labelFont,color=pid.black)
             canvas.drawString('Suggestive %s = %2.2f' % (self.LRS_LOD, self.suggestive),xLeftOffset+42,startPosY + 5 +stepPosY,font=labelFont,color=pid.black)
 
-        labelFont=pid.Font(ttf="verdana",size=12*fontZoom)
+        labelFont = pid.Font(ttf="verdana",size=12*fontZoom)
         labelColor = pid.black
         if self.selectedChr == -1:
             string1 = 'Mapping for Dataset: %s, mapping on All Chromosomes' % self.dataset.group.name
         else:
             string1 = 'Mapping for Dataset: %s, mapping on Chromosome %s' % (self.dataset.group.name, self.ChrList[self.selectedChr][0])
-        if self.controlLocus and self.doControl != "false":
-            string2 = 'Using %s as control' % self.controlLocus
-        else:
-            if self.mapping_method == "gemma" or self.mapping_method == "gemma_bimbam":
-                string2 = 'Using GEMMA mapping method with no control for other QTLs.'
-                if self.covariates != "":
-                    string3 = 'Using following traits as covariates: ' + self.covariates
-            elif self.mapping_method == "rqtl_plink" or self.mapping_method == "rqtl_geno":
-                string2 = 'Using R/qtl mapping method with no control for other QTLs.'
-            elif self.mapping_method == "plink":
-                string2 = 'Using PLINK mapping method with no control for other QTLs.'
+
+        string3 = ''
+        if self.mapping_method == "gemma" or self.mapping_method == "gemma_bimbam":
+            if self.use_loco == "True":
+                string2 = 'Using GEMMA mapping method with LOCO and '
             else:
-                string2 = 'Using Haldane mapping function with no control for other QTLs'
+                string2 = 'Using GEMMA mapping method with '
+            if self.covariates != "":
+                string2 += 'the cofactors below:'
+                cofactor_names = ", ".join([covar.split(":")[0] for covar in self.covariates.split(",")])
+                string3 = cofactor_names
+            else:
+                string2 += 'no cofactors'
+        elif self.mapping_method == "rqtl_plink" or self.mapping_method == "rqtl_geno":
+            string2 = 'Using R/qtl mapping method with '
+            if self.controlLocus and self.doControl != "false":
+                string2 += '%s as control' % self.controlLocus
+            else:
+                string2 += 'no control for other QTLs'
+        elif self.mapping_method == "plink":
+            string2 = 'Using PLINK mapping method with no control for other QTLs'
+        else:
+            string2 = 'Using Haldane mapping function with '
+            if self.controlLocus and self.doControl != "false":
+                string2 += '%s as control' % self.controlLocus
+            else:
+                string2 += 'no control for other QTLs'
+
         if self.this_trait.name:
             identification = "Trait ID: %s : %s" % (self.dataset.fullname, self.this_trait.name)
             d = 4+ max(canvas.stringWidth(identification, font=labelFont), canvas.stringWidth(string1, font=labelFont), canvas.stringWidth(string2, font=labelFont))
@@ -1287,6 +944,8 @@ class MarkerRegression(object):
             d = 4+ max(canvas.stringWidth(string1, font=labelFont), canvas.stringWidth(string2, font=labelFont))
         canvas.drawString(string1,canvas.size[0] - xRightOffset-d,35*fontZoom,font=labelFont,color=labelColor)
         canvas.drawString(string2,canvas.size[0] - xRightOffset-d,50*fontZoom,font=labelFont,color=labelColor)
+        if string3 != '':
+            canvas.drawString(string3,canvas.size[0] - xRightOffset-d,65*fontZoom,font=labelFont,color=labelColor)
 
 
     def drawGeneBand(self, canvas, gifmap, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
@@ -1303,9 +962,6 @@ class MarkerRegression(object):
 
         yPaddingTop = yTopOffset
 
-        displayStartInBases = startMb*self.kONE_MILLION
-        displayEndInBases = endMb*self.kONE_MILLION
-
         for gIndex, theGO in enumerate(self.geneCol):
             geneNCBILink = 'http://www.ncbi.nlm.nih.gov/gene?term=%s'
             if self.dataset.group.species == "mouse":
@@ -1320,7 +976,6 @@ class MarkerRegression(object):
                 cdsStart = theGO['cdsStart']
                 cdsEnd = theGO['cdsEnd']
                 accession = theGO['NM_ID']
-                geneId = theGO['GeneID']
                 geneSymbol = theGO["GeneSymbol"]
                 strand = theGO["Strand"]
                 exonCount = theGO["exonCount"]
@@ -1338,10 +993,7 @@ class MarkerRegression(object):
                     geneStartPix = xLeftOffset; # clip the first in-range gene
 
                 #color the gene based on SNP density
-
-
                 #found earlier, needs to be recomputed as snps are added
-
                 #always apply colors now, even if SNP Track not checked - Zach 11/24/2010
 
                 densities=[1.0000000000000001e-05, 0.094094033555233408, 0.3306166377816987, 0.88246026851027781, 2.6690084029581951, 4.1, 61.0]
@@ -1374,7 +1026,6 @@ class MarkerRegression(object):
                 txEnd = theGO["TxEnd"]
                 cdsStart = theGO["TxStart"]
                 cdsEnd = theGO["TxEnd"]
-                geneId = theGO["GeneID"]
                 geneSymbol = theGO["GeneSymbol"]
                 strand = theGO["Strand"]
                 exonCount = 0
@@ -1403,11 +1054,7 @@ class MarkerRegression(object):
 
             #Draw Genes
             geneYLocation = yPaddingTop + (gIndex % self.NUM_GENE_ROWS) * self.EACH_GENE_HEIGHT*zoom
-
-            if 1:#drawClickableRegions:
-                geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
-            else:
-                geneYLocation += self.BAND_SPACING
+            geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
 
             #draw the detail view
             if self.endMb - self.startMb <= self.DRAW_DETAIL_MB and geneEndPix - geneStartPix > self.EACH_GENE_ARROW_SPACING * 3:
@@ -1415,7 +1062,6 @@ class MarkerRegression(object):
                 arrowColor = pid.Color(0.7, 0.7, 0.7)
 
                 #draw the line that runs the entire length of the gene
-                #canvas.drawString(str(geneStartPix), 300, 400)
                 canvas.drawLine(geneStartPix, geneYLocation + self.EACH_GENE_HEIGHT/2*zoom, geneEndPix, geneYLocation + self.EACH_GENE_HEIGHT/2*zoom, color=outlineColor, width=1)
 
                 #draw the arrows
@@ -1465,7 +1111,6 @@ class MarkerRegression(object):
                         utrStartPix = xLeftOffset + plotWidth
                     #canvas.drawRect(utrStartPix, geneYLocation, utrEndPix, (geneYLocation+self.EACH_GENE_HEIGHT*zoom), edgeColor=utrColor, fillColor =utrColor)
 
-                    #if self.DRAW_UTR_LABELS and self.endMb - self.startMb <= self.DRAW_UTR_LABELS_MB:
                     if self.endMb - self.startMb <= self.DRAW_UTR_LABELS_MB:
                         if strand == "-":
                             labelText = "3'"
@@ -1487,7 +1132,6 @@ class MarkerRegression(object):
                         utrStartPix = xLeftOffset + plotWidth
                     #canvas.drawRect(utrStartPix, geneYLocation, utrEndPix, (geneYLocation+self.EACH_GENE_HEIGHT*zoom), edgeColor=utrColor, fillColor =utrColor)
 
-                    #if self.DRAW_UTR_LABELS and self.endMb - self.startMb <= self.DRAW_UTR_LABELS_MB:
                     if self.endMb - self.startMb <= self.DRAW_UTR_LABELS_MB:
                         if strand == "-":
                             labelText = "5'"
@@ -1508,8 +1152,6 @@ class MarkerRegression(object):
         if self.plotScale != 'physic' or self.selectedChr == -1 or not self.geneCol:
             return
 
-        fpText = open(os.path.join(webqtlConfig.TMPDIR, "hallo") + '.txt','wb')
-
         clickableRegionLabelFont=pid.Font(ttf="verdana", size=9, bold=0)
 
         xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
@@ -1517,13 +1159,9 @@ class MarkerRegression(object):
         plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
         yZero = canvas.size[1] - yBottomOffset
         fontZoom = zoom
-        widthMultiplier = 1
 
         yPaddingTop = yTopOffset
 
-        exprdrawn = 0
-
-        #thisTrait = self.traitList[0]
         thisTrait = self.this_trait
         _strains, _vals, _vars, _aliases = thisTrait.export_informative()
 
@@ -1532,7 +1170,6 @@ class MarkerRegression(object):
             if _strains[ii] in self.dataset.group.samplelist:
                 temp = GeneralObject(name=_strains[ii], value=_val)
                 smd.append(temp)
-
 
         smd.sort(lambda A, B: cmp(A.value, B.value))
         smd.reverse()
@@ -1558,12 +1195,8 @@ class MarkerRegression(object):
                 drawit = 0;
 
             if drawit == 1:
-
                 if self.genotype[0][i].name != " - " :
-
                     plotRight = geneEndPix + 4
-
-
 
 #### end find out PlotRight
 
@@ -1619,11 +1252,7 @@ class MarkerRegression(object):
                 #Draw Genes
 
                 geneYLocation = yPaddingTop + self.NUM_GENE_ROWS * (self.EACH_GENE_HEIGHT)*zoom
-
-                if 1:#drawClickableRegions:
-                    geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
-                else:
-                    geneYLocation += self.BAND_SPACING
+                geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
 
                 if self.genotype[0][i].name != " - " :
 
@@ -1710,8 +1339,6 @@ class MarkerRegression(object):
                 canvas.drawString("%s" % (samplelist[j]), (xLeftOffset + plotWidth + 10) , geneYLocation+8+2*ind*self.EACH_GENE_HEIGHT*zoom, font=pid.Font(ttf="verdana", size=12, bold=0), color=pid.black)
                 canvas.drawString("%2.2f" % (expr), (xLeftOffset + plotWidth + 60) , geneYLocation+8+2*ind*self.EACH_GENE_HEIGHT*zoom, font=pid.Font(ttf="verdana", size=12, bold=0), color=pid.black)
 
-        fpText.close()
-
 ## END HaplotypeAnalyst
 
     def drawClickBand(self, canvas, gifmap, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
@@ -1755,7 +1382,6 @@ class MarkerRegression(object):
                 xBrowse2 = min(xLeftOffset + plotWidth, (pixel + pixelStep - 1))
 
                 WEBQTL_COORDS = "%d, %d, %d, %d" % (xBrowse1, paddingTop, xBrowse2, (paddingTop+self.WEBQTL_BAND_HEIGHT))
-                bandWidth = xBrowse2 - xBrowse1
                 WEBQTL_HREF = "javascript:rangeView('%s', %f, %f)" % (self.selectedChr - 1, max(0, (calBase-webqtlZoomWidth))/1000000.0, (calBase+webqtlZoomWidth)/1000000.0)
 
                 WEBQTL_TITLE = "Click to view this section of the genome in WebQTL"
@@ -1793,7 +1419,6 @@ class MarkerRegression(object):
             traitFont = pid.Font(ttf="verdana", size=14, bold=0)
             chrX = xLeftOffset + plotWidth - 2 - canvas.stringWidth("Chr %s" % self.ChrList[self.selectedChr][0], font=chrFont)
             canvas.drawString("Chr %s" % self.ChrList[self.selectedChr][0], chrX, ensemblPaddingTop-5, font=chrFont, color=pid.gray)
-            traitX = chrX - 28 - canvas.stringWidth("database", font=traitFont)
             # end of drawBrowserClickableRegions
         else:
             #draw the gray text
@@ -1801,7 +1426,6 @@ class MarkerRegression(object):
             traitFont = pid.Font(ttf="verdana", size=14, bold=0)
             chrX = xLeftOffset + (plotWidth - canvas.stringWidth("Chr %s" % currentChromosome, font=chrFont))/2
             canvas.drawString("Chr %s" % currentChromosome, chrX, 32, font=chrFont, color=pid.gray)
-            traitX = chrX - 28 - canvas.stringWidth("database", font=traitFont)
             # end of drawBrowserClickableRegions
         pass
 
@@ -1828,13 +1452,11 @@ class MarkerRegression(object):
         xAxisLabelColor = pid.black
         fontHeight = 12*fontZoom # How tall the font that we're using is
         spacingFromLabelToAxis = 5
-        spacingFromLineToLabel = 3
 
         if self.plotScale == 'physic':
             strYLoc = yZero + spacingFromLabelToAxis + canvas.fontHeight(MBLabelFont)
             ###Physical single chromosome view
             if self.selectedChr > -1:
-                graphMbWidth  = endMb - startMb
                 XScale = Plot.detScale(startMb, endMb)
                 XStart, XEnd, XStep = XScale
                 if XStep < 8:
@@ -1860,7 +1482,6 @@ class MarkerRegression(object):
                         canvas.drawString(labelStr, drawStringXc, strYLoc, font=MBLabelFont, color=xAxisLabelColor, angle=0)
                     else:
                         canvas.drawLine(Xc, yZero, Xc, yZero+xMinorTickHeight, color=xAxisTickMarkColor, width=X_MINOR_TICK_THICKNESS) # Draw the MINOR tick mark
-                    # end else
 
             ###Physical genome wide view
             else:
@@ -1890,7 +1511,6 @@ class MarkerRegression(object):
             preLpos = -1
             distinctCount = 0.0
 
-            #if len(self.genotype) > 1:
             if self.selectedChr == -1: #ZS: If viewing full genome/all chromosomes
                 for i, _chr in enumerate(self.genotype):
                     thisChr = []
@@ -1998,12 +1618,6 @@ class MarkerRegression(object):
         #If so, we need to compute the maximum LRS value to determine where the max y-value should be, and call this LRS_LOD_Max.
         #LRSTop is then defined to be above the LRS_LOD_Max by enough to add one additional LRSScale increment.
         #if we are using a set-scale, then we set LRSTop to be the user's value, and LRS_LOD_Max doesn't matter.
-
-        #ZS: I'm not sure what this if statement is supposed to do. It appears to work correctly for both LOD and LRS if I just set lodm to 1.0
-        # if self.LRS_LOD == 'LRS':
-            # lodm = self.LODFACTOR
-        # else:
-            # lodm = 1.0
 
         #ZS: This is a mess, but I don't know a better way to account for different mapping methods returning results in different formats + the option to change between LRS and LOD
         if self.lrsMax <= 0:  #sliding scale
@@ -2120,11 +1734,7 @@ class MarkerRegression(object):
             lrsEdgeWidth = 1
         else:
             if self.additiveChecked:
-                additiveMax = max([abs(X['additive']) for X in self.qtlresults])
-            #if INTERCROSS:
-            #    dominanceMax = max(map(lambda X : abs(X.dominance), self.qtlresults[0]))
-            #else:
-            #    dominanceMax = -1
+                additiveMax = max(map(lambda X : abs(X['additive']), self.qtlresults))
             lrsEdgeWidth = 2
 
         if zoom == 2:
@@ -2143,7 +1753,6 @@ class MarkerRegression(object):
         startPosX = xLeftOffset
         for i, qtlresult in enumerate(self.qtlresults):
             m = 0
-            #startPosX = xLeftOffset
             thisLRSColor = self.colorCollection[0]
 
             if qtlresult['chr'] != previous_chr and self.selectedChr == -1:
@@ -2190,25 +1799,13 @@ class MarkerRegression(object):
                     startPosX += newStartPosX
                     oldStartPosX = newStartPosX
 
-            #startPosX += (self.ChrLengthDistList[j]+self.GraphInterval)*plotXScale
-
-            #for j, _chr in enumerate(self.genotype):
             #ZS: This is beause the chromosome value stored in qtlresult['chr'] can be (for example) either X or 20 depending upon the mapping method/scale used
             if self.plotScale == "physic":
                 this_chr = str(self.ChrList[self.selectedChr][0])
             else:
                 this_chr = str(self.ChrList[self.selectedChr][1]+1)
             if self.selectedChr == -1 or str(qtlresult['chr']) == this_chr:
-                #AdditiveCoordXY = []
-                #DominanceCoordXY = []
-                #for k, _locus in enumerate(_chr):
                 Xc = startPosX + (qtlresult['Mb']-startMb)*plotXScale
-                #if self.plotScale == 'physic':
-                    #Xc = startPosX + (_locus.Mb-startMb)*plotXScale
-                    #Xc = startPosX + (qtlresult['Mb']-startMb)*plotXScale
-                #else:
-                    #Xc = startPosX + (_locus.cM-_chr[0].cM)*plotXScale
-                    #Xc = startPosX + (qtlresult['cM']-qtlresult[0]['cM'])*plotXScale
 
                 # updated by NL 06-18-2011:
                 # fix the over limit LRS graph issue since genotype trait may give infinite LRS;
@@ -2232,11 +1829,6 @@ class MarkerRegression(object):
                             Yc = yZero - qtlresult['lod_score']*self.LODFACTOR*LRSHeightThresh/LRS_LOD_Max
                         else:
                             Yc = yZero - qtlresult['lod_score']*LRSHeightThresh/LRS_LOD_Max
-                #if qtlresult['lrs_value'] > 460 or qtlresult['lrs_value']=='inf':
-                #if self.qtlresults[j]['lrs_value'] > 460 or self.qtlresults[j]['lrs_value']=='inf':
-                #    Yc = yZero - webqtlConfig.MAXLRS*LRSHeightThresh/LRS_LOD_Max
-                #else:
-                #    Yc = yZero - qtlresult['lrs_value']*LRSHeightThresh/LRS_LOD_Max
 
                 if self.manhattan_plot == True:
                     point_color = pid.black
@@ -2249,11 +1841,8 @@ class MarkerRegression(object):
                        additiveMax = 0.000001
                    Yc = yZero - qtlresult['additive']*AdditiveHeightThresh/additiveMax
                    AdditiveCoordXY.append((Xc, Yc))
-                # if not self.multipleInterval and INTERCROSS and self.additiveChecked:
-                   # Yc = yZero - qtlresult['dominance']*DominanceHeightThresh/dominanceMax
-                   # DominanceCoordXY.append((Xc, Yc))
+
                 m += 1
-                #canvas.drawPolygon(LRSCoordXY,edgeColor=thisLRSColor,closed=0, edgeWidth=lrsEdgeWidth, clipX=(xLeftOffset, xLeftOffset + plotWidth))
 
         if self.manhattan_plot != True:
             canvas.drawPolygon(LRSCoordXY,edgeColor=thisLRSColor,closed=0, edgeWidth=lrsEdgeWidth, clipX=(xLeftOffset, xLeftOffset + plotWidth))
@@ -2325,7 +1914,6 @@ class MarkerRegression(object):
             additiveScale = Plot.detScaleOld(0,additiveMax)
             additiveStep = (additiveScale[1]-additiveScale[0])/additiveScale[2]
             additiveAxisList = Plot.frange(0, additiveScale[1], additiveStep)
-            maxAdd =  additiveScale[1]
             addPlotScale = AdditiveHeightThresh/additiveMax
 
             additiveAxisList.append(additiveScale[1])
@@ -2417,325 +2005,6 @@ class MarkerRegression(object):
 
         return plotXScale
 
-    def calculateAllResult(self, fd):
-
-        weightedRegression = fd.formdata.getvalue('applyVarianceSE')
-
-        self.genotype = self.genotype.addinterval()
-        resultSlice = []
-        controlGeno = []
-
-        if self.multipleInterval:
-            self.suggestive = 0
-            self.significant = 0
-            if self.selectedChr > -1:
-                self.genotype.chromosome = [self.genotype[self.selectedChr]]
-        else:
-            #single interval mapping
-            try:
-                self.suggestive = float(fd.formdata.getvalue('permSuggestive'))
-                self.significant = float(fd.formdata.getvalue('permSignificance'))
-            except:
-                self.suggestive = None
-                self.significant = None
-
-            _strains, _vals, _vars = self.traitList[0].exportInformative(weightedRegression)
-
-            if webqtlUtil.ListNotNull(_vars):
-                pass
-            else:
-                weightedRegression = 0
-                _strains, _vals, _vars = self.traitList[0].exportInformative()
-
-            ##locate genotype of control Locus
-            if self.controlLocus:
-                controlGeno2 = []
-                _FIND = 0
-                for _chr in self.genotype:
-                    for _locus in _chr:
-                        if _locus.name == self.controlLocus:
-                            controlGeno2 = _locus.genotype
-                            _FIND = 1
-                            break
-                    if _FIND:
-                        break
-                if controlGeno2:
-                    _prgy = list(self.genotype.prgy)
-                    for _strain in _strains:
-                        _idx = _prgy.index(_strain)
-                        controlGeno.append(controlGeno2[_idx])
-                else:
-                    return "The control marker you selected is not in the genofile."
-
-            if weightedRegression:
-                self.perm_output = self.genotype.permutation(strains = _strains, trait = _vals,
-                        variance = _vars, nperm=self.nperm)
-            else:
-                self.perm_output = self.genotype.permutation(strains = _strains, trait = _vals,
-                        nperm=self.nperm)
-
-            if self.significant and self.suggestive:
-                pass
-            else:
-                if self.nperm < 100:
-                    self.suggestive = 0
-                    self.significant = 0
-                else:
-                    self.suggestive = self.perm_output[int(self.nperm*0.37-1)]
-                    self.significant = self.perm_output[int(self.nperm*0.95-1)]
-
-            #calculating bootstrap
-            #from now on, genotype could only contain a single chromosome
-            #permutation need to be performed genome wide, this is not the case for bootstrap
-
-            #due to the design of qtlreaper, composite regression need to be performed genome wide
-            if not self.controlLocus and self.selectedChr > -1:
-                self.genotype.chromosome = [self.genotype[self.selectedChr]]
-            elif self.selectedChr > -1: #self.controlLocus and self.selectedChr > -1
-                lociPerChr = list(map(len, self.genotype))
-                resultSlice = reduce(lambda X, Y: X+Y, lociPerChr[:self.selectedChr], 0)
-                resultSlice = [resultSlice,resultSlice+lociPerChr[self.selectedChr]]
-            else:
-                pass
-
-        #calculate QTL for each trait
-        self.qtlresults = []
-
-        for thisTrait in self.traitList:
-            _strains, _vals, _vars = thisTrait.exportInformative(weightedRegression)
-            if self.controlLocus:
-                if weightedRegression:
-                    qtlresult = self.genotype.regression(strains = _strains, trait = _vals,
-                                    variance = _vars, control = self.controlLocus)
-                else:
-                    qtlresult = self.genotype.regression(strains = _strains, trait = _vals,
-                            control = self.controlLocus)
-                if resultSlice:
-                    qtlresult = qtlresult[resultSlice[0]:resultSlice[1]]
-            else:
-                if weightedRegression:
-                    qtlresult = self.genotype.regression(strains = _strains, trait = _vals,
-                                    variance = _vars)
-                else:
-                    qtlresult = self.genotype.regression(strains = _strains, trait = _vals)
-
-            self.qtlresults.append(qtlresult)
-
-        if not self.multipleInterval:
-            if self.controlLocus and self.selectedChr > -1:
-                self.genotype.chromosome = [self.genotype[self.selectedChr]]
-
-            if self.bootChecked:
-                if controlGeno:
-                    self.bootResult = self.genotype.bootstrap(strains = _strains, trait = _vals,
-                            control = controlGeno, nboot=fd.nboot)
-                elif weightedRegression:
-                    self.bootResult = self.genotype.bootstrap(strains = _strains, trait = _vals,
-                            variance = _vars, nboot=fd.nboot)
-                else:
-                    self.bootResult = self.genotype.bootstrap(strains = _strains, trait = _vals,
-                            nboot=fd.nboot)
-            else:
-                self.bootResult = []
-
-    def calculatePValue (self, query_LRS, permutation_LRS_array):
-        query_index = len(permutation_LRS_array)
-        for i, one_permutation_LRS in enumerate(permutation_LRS_array):
-            if one_permutation_LRS >= query_LRS:
-                query_index = i
-                break
-        try:
-            P_value = float(len(permutation_LRS_array) - query_index) / len(permutation_LRS_array)
-        except:
-            P_value = ''
-        return P_value
-
-    def helpButton(self, anchor):
-        link = Link(
-            self.HELP_PAGE_REF + '#%s' % anchor
-            , self.qmarkImg)
-        link.set_attribute("target", self.HELP_WINDOW_NAME)
-        return link
-
-
-    def traitRemapTD(self, cursor, fd):
-        chrList = Select(name="chromosomes")
-        for label, value in self.ChrList:
-            chrList.create_option(label, value, value==self.selectedChr)
-
-        chrList.set_attribute(
-            "onChange"
-            , "chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
-
-        physicOnly = Span(' *')
-        physicOnly.add_css_classes("cr")
-
-        showSNPCheck = make_checkbox(name='showSNP', value='ON', checked=self.SNPChecked, css_classes='checkbox')
-        showSNPText = Span('SNP Track ', self.helpButton("snpSeismograph"))
-        showSNPText.add_css_classes("fs12 fwn")
-
-        showGenesCheck = make_checkbox(name='showGenes', value='ON', checked = self.geneChecked, css_classes='checkbox')
-        showGenesText  = Span('Gene Track')
-        showGenesText.add_css_classes("fs12 fwn")
-
-        showIntervalAnalystCheck = make_checkbox(name='intervalAnalystCheck', value='ON', checked=self.intervalAnalystChecked, css_classes='checkbox')
-        showIntervalAnalystText = Span('Interval Analyst')
-        showIntervalAnalystText.add_css_classes("fs12 fwn")
-## BEGIN HaplotypeAnalyst
-
-        showHaplotypeAnalystCheck = make_checkbox(name='haplotypeAnalystCheck', value='ON', checked=self.haplotypeAnalystChecked, css_classes='checkbox')
-        showHaplotypeAnalystText = Span('Haplotype Analyst')
-        showHaplotypeAnalystText.add_css_classes("fs12 fwn")
-## END HaplotypeAnalyst
-
-        leftBox = TextInput(name="startMb")
-        leftBox.size = 10
-        rightBox = TextInput(name="endMb")
-        rightBox.size = 10
-        if self.selectedChr > -1 and self.plotScale=='physic':
-            leftBox.value = self.startMb
-            rightBox.value = self.endMb
-
-        scaleBox = Select(name="scale")
-        scaleBox.set_attribute("onChange", "chrLength(this.form.chromosomes.value, this.form.scale.value, this.form, self.ChrLengthMbList);")
-        scaleBox.create_option("Genetic", "morgan", "morgan"==self.plotScale)
-        if fd.genotype.Mbmap:
-            scaleBox.create_option("Physical", "physic", "physic"==self.plotScale)
-
-        permBox = make_checkbox(name="permCheck", value='ON', checked=self.permChecked, css_classes="checkbox")
-        permText = Span("Permutation Test ", self.helpButton("Permutation"))
-        permText.add_css_classes("fs12 fwn")
-        bootBox = make_checkbox(name="bootCheck", value='ON', checked=self.bootChecked, css_classes="checkbox")
-        bootText = Span("Bootstrap Test ", self.helpButton("bootstrap"))
-        bootText.add_css_classes("fs12 fwn")
-        additiveBox = make_checkbox(name="additiveCheck", value='ON', checked=self.additiveChecked, css_classes="checkbox")
-        additiveText = Span("Allele Effects ", self.helpButton("additive"))
-        additiveText.add_css_classes("fs12 fwn")
-        dominanceBox = make_checkbox(name="dominanceCheck", value='ON', checked=self.dominanceChecked, css_classes="checkbox")
-        dominanceText = Span("Dominance Effects ", self.helpButton("Dominance"))
-        dominanceText.add_css_classes("fs12 fwn")
-
-        lrsRadio = make_radio_button(name="LRSCheck", value='LRS', checked = (self.LRS_LOD == "LRS"))
-        lodRadio = make_radio_button(name="LRSCheck", value='LOD', checked = (self.LRS_LOD != "LRS"))
-        lrsMaxBox = TextInput(name="lrsMax", value=self.lrsMax)
-        lrsMaxBox.size = 3
-        widthBox = TextInput(name="graphWidth", value=str(self.graphWidth))
-        widthBox.size = 5
-        legendBox = make_checkbox(name="viewLegend", value='ON', checked=self.legendChecked, css_classes="checkbox")
-        legendText = Span("Legend")
-        legendText.add_css_classes("fs12 fwn")
-
-        draw2XBox = make_checkbox(name="draw2X", value='ON', css_classes="checkbox")
-        draw2XText = Span("2X Plot")
-        draw2XText.add_css_classes("fs12 fwn")
-
-        regraphButton = Button("Remap")
-        regraphButton.add_css_classes("button")
-        regraphButton.set_attribute("onClick", "javascript:databaseFunc(this.form,'showIntMap');")
-
-        controlsForm = HT.Form(cgi= os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), enctype="multipart/form-data", name="changeViewForm", submit=HT.Input(type='hidden'))
-        controlsTable = HT.TableLite(border=0)
-        innerControlsTable = HT.TableLite(border=0)
-        if self.selectedChr == -1:
-            minimumGraphWidth = self.MULT_GRAPH_MIN_WIDTH
-        else:
-            minimumGraphWidth = self.GRAPH_MIN_WIDTH
-        innerControlsTable.append(
-                HT.TR(HT.TD("Chr: ", Class="fs12 fwb ffl"),HT.TD(chrList, scaleBox, regraphButton)),
-                HT.TR(HT.TD("View: ", Class="fs12 fwb ffl"),HT.TD(leftBox, " to ", rightBox, "Mb", physicOnly, NOWRAP="on")),
-                HT.TR(HT.TD("Units: ", Class="fs12 fwb ffl"), HT.TD(lrsRadio, "LRS ", lodRadio, "LOD ", self.helpButton("LOD"))),
-                HT.TR(HT.TD(" ", Class="fs12 fwb ffl"), HT.TD(lrsMaxBox, "units on Y-axis (0 for default)", Class="fs11 fwn")),
-                HT.TR(HT.TD("Width: ", Class="fs12 fwb ffl"), HT.TD(widthBox, "pixels (minimum=%d)" % minimumGraphWidth, Class="fs11 fwn "))
-        )
-        #whether SNP
-        # comment this, because this will make caculation very slow.
-        #cursor.execute("Select Species.Id from SnpAll, Species where SnpAll.SpeciesId = Species.Id and Species.Name = %s limit 1", self.species)
-        #SNPorNot = cursor.fetchall()
-        SNPorNot = True
-        #Whether Gene
-        cursor.execute("Select Species.Id from GeneList, Species where GeneList.SpeciesId = Species.Id and Species.Name = %s limit 1", self.species)
-        GeneorNot = cursor.fetchall()
-
-        if self.multipleInterval:
-            optionPanel = HT.TD(valign="top", NOWRAP="on")
-        else:
-            optionPanel = HT.TD(permBox, permText, HT.BR(), bootBox, bootText, HT.BR(), additiveBox, additiveText, HT.BR(), valign="top", NOWRAP="on")
-		#whether dominance
-        if self.genotype.type == 'intercross':
-            optionPanel.append(dominanceBox, dominanceText, HT.BR())
-        if SNPorNot:
-            optionPanel.append(showSNPCheck, showSNPText, physicOnly, HT.BR())
-        if GeneorNot:
-            optionPanel.append(showGenesCheck, showGenesText, physicOnly, HT.BR(),
-                    showIntervalAnalystCheck, showIntervalAnalystText, physicOnly, HT.BR())
-## BEGIN HaplotypeAnalyst
-        optionPanel.append(showHaplotypeAnalystCheck, showHaplotypeAnalystText, physicOnly, HT.BR())
-## END HaplotypeAnalyst
-        optionPanel.append(legendBox, legendText, HT.BR(),draw2XBox, draw2XText)
-        controlsTable.append(
-                HT.TR(HT.TD(innerControlsTable, valign="top"),
-                        HT.TD("&nbsp;", width=15), optionPanel),
-                HT.TR(HT.TD(physicOnly, " only apply to single chromosome physical mapping", align="Center", colspan=3, Class="fs11 fwn"))
-                        )
-        controlsForm.append(controlsTable)
-
-        controlsForm.append(HT.Input(name="permSuggestive", value=self.suggestive, type="hidden"))
-        controlsForm.append(HT.Input(name="permSignificance", value=self.significant, type="hidden"))
-
-## BEGIN HaplotypeAnalyst #### haplotypeAnalystCheck added below
-## END HaplotypeAnalyst
-
-        for key in list(fd.formdata.keys()):
-            if key == "searchResult" and type([]) == type(fd.formdata.getvalue(key)):
-                controlsForm.append(HT.Input(name=key, value=string.join(fd.formdata.getvalue(key), "\t"), type="hidden"))
-            elif key not in ("endMb",  "startMb",  "chromosomes", "scale", "permCheck", "bootCheck",  "additiveCheck", "dominanceCheck",
-                    "LRSCheck", "intervalAnalystCheck", "haplotypeAnalystCheck", "lrsMax", "graphWidth", "viewLegend", 'showGenes', 'showSNP', 'draw2X',
-                    'permSuggestive', "permSignificance"):
-                controlsForm.append(HT.Input(name=key, value=fd.formdata.getvalue(key), type="hidden"))
-            else:
-                pass
-
-        # updated by NL, move function changeView(i) to webqtl.js and change it to function changeView(i, Chr_Mb_list)
-        #                move function chrLength(a, b, c) to webqtl.js and change it to function chrLength(a, b, c, Chr_Mb_list)
-        self.dict['js1'] = '<script src="/javascript/sorttable.js"></script>'
-        return HT.TD(controlsForm, Class="doubleBorder", width=400)
-
-    def traitInfoTD(self, fd):
-        if self.selectedChr == -1:
-            intMapHeading = HT.Paragraph('Map Viewer: Whole Genome', Class="title")
-        else:
-            intMapHeading = HT.Paragraph('Map Viewer: Chr %s' % self.genotype[0].name, Class="title")
-
-        heading2 = HT.Paragraph(HT.Strong('Population: '), "%s %s" % (self.species.title(), fd.RISet) , HT.BR())
-        #Trait is from an database
-        if self.traitList and self.traitList[0] and self.traitList[0].db:
-            #single trait
-            if len(self.traitList) == 1:
-                thisTrait = self.traitList[0]
-                trait_url = HT.Href(text=thisTrait.name, url = os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE) + \
-                        "?FormID=showDatabase&incparentsf1=1&database=%s&ProbeSetID=%s" % (thisTrait.db.name, thisTrait.name), \
-                        target='_blank', Class="normalsize")
-                heading2.append(HT.Strong("Database: "), HT.Href(text=thisTrait.db.fullname, url = webqtlConfig.INFOPAGEHREF % thisTrait.db.name ,\
-                        target='_blank',Class="normalsize"),HT.BR())
-                if thisTrait.db.type == 'ProbeSet':
-                    heading2.append(HT.Strong('Trait ID: '), trait_url, HT.BR(),
-                            HT.Strong("Gene Symbol: "), HT.Italic('%s' % thisTrait.symbol,id="green"),HT.BR())
-                    if thisTrait.chr and thisTrait.mb:
-                        heading2.append(HT.Strong("Location: "), 'Chr %s @ %s Mb' % (thisTrait.chr, thisTrait.mb))
-                elif thisTrait.db.type == 'Geno':
-                    heading2.append(HT.Strong('Locus : '), trait_url, HT.BR())
-                    if thisTrait.chr and thisTrait.mb:
-                        heading2.append(HT.Strong("Location: "), 'Chr %s @ %s Mb' % (thisTrait.chr, thisTrait.mb))
-                elif thisTrait.db.type == 'Publish':
-                    heading2.append(HT.Strong('Record ID: '), trait_url, HT.BR())
-                else:
-                    pass
-            else:
-                heading2.append(HT.Strong("Traits: "), "Multiple Traits")
-        else:
-            heading2.append(HT.Strong("Trait Name: "), fd.identification)
-        return HT.TD(intMapHeading, heading2, valign="top")
-
     def drawPermutationHistogram(self):
         #########################################
         #      Permutation Graph
@@ -2754,62 +2023,18 @@ class MarkerRegression(object):
 
         return filename
 
-    def permutationTextFile(self):
-        filename= webqtlUtil.genRandStr("Reg_")
-        fpText = open('%s.txt' % (webqtlConfig.TMPDIR+filename), 'wb')
-        fpText.write('Suggestive LRS (p = 0.63) = %3.2f\n'%self.suggestive)
-        fpText.write('Significant LRS (p = 0.05) = %3.2f\n'%self.significant)
-        fpText.write('Highly Significant LRS (p = 0.01) = %3.2f\n\n'%self.highlysignificant)
-        fpText.write('%s Permutations\n\n' % str(len(self.perm_output)))
-        LRSInfo =HT.Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;Suggestive LRS = %3.2f\n'%self.suggestive,
-                              HT.BR(),
-                              '&nbsp;&nbsp;&nbsp;&nbsp;Significant LRS =%3.2f\n'%self.significant,
-                              HT.BR(),
-                              '&nbsp;&nbsp;&nbsp;&nbsp;Highly Significant LRS =%3.2f\n' % self.highlysignificant)
-
-        for lrs_value in self.perm_output:
-            fpText.write(str(lrs_value) + "\n")
-
-        textUrl = HT.Href(text = 'Download Permutation Results', url= '/tmp/'+filename+'.txt', target = "_blank", Class='fs12 fwn')
-
-        return textUrl
-
     def geneTable(self, geneCol, refGene=None):
-        #SNPLink = 0 #Not sure what this is used for
-
         if self.dataset.group.species == 'mouse' or self.dataset.group.species == 'rat':
-            #gene_tblobj = {}
-            self.gene_table_header = self.getGeneTableHeader(refGene=None)
+            self.gene_table_header = self.getGeneTableHeaderList(refGene=None)
             self.gene_table_body = self.getGeneTableBody(geneCol, refGene=None)
-            #gene_tblobj["header"] = self.getGeneTableHeader(refGene=None)
-            #gene_tblobj["body"] = self.getGeneTableBody(geneCol, refGene=None)
-
-            #sortby = self.getSortByValue()
-
-            #filename= webqtlUtil.genRandStr("Mapping_")
-
-            #objfile = open('%s.obj' % (webqtlConfig.TMPDIR+filename), 'wb')
-            #cPickle.dump(gene_tblobj, objfile)
-            #objfile.close()
-
-            #gene_table = webqtlUtil.genTableObj(tblobj=gene_tblobj, file=filename, sortby=sortby, tableID="sortable", addIndex="0")
         else:
             self.gene_table_header = None
             self.gene_table_body = None
-            #gene_table = ""
 
-        #return gene_table
-
-    def getGeneTableHeader(self, refGene=None):
-
-        gene_tblobj_header = []
+    def getGeneTableHeaderList(self, refGene=None):
 
         gene_table_header_list = []
-
-        col_class = "fs14 fwb ffl b1 cw cbrb"
-
         if self.dataset.group.species == "mouse":
-
             if refGene:
                 gene_table_header_list = ["Index",
                                                "Symbol",
@@ -2835,7 +2060,6 @@ class MarkerRegression(object):
                                           "Mb Start (hg19)",
                                           "Gene Description"]
         elif self.dataset.group.species == "rat":
-
             gene_table_header_list = ["",
                                       "Index",
                                       "Symbol",
@@ -2847,40 +2071,14 @@ class MarkerRegression(object):
                                       "Human Chr",
                                       "Mb Start (hg19)",
                                       "Gene Description"]
-        else:
-            pass
 
         return gene_table_header_list
 
     def getGeneTableBody(self, geneCol, refGene=None):
-
-        tblobj_body = [] #contains table rows
-        className = "fs13 b1 c222"
-
         gene_table_body = []
 
         tableIterationsCnt = 0
         if self.dataset.group.species == "mouse":
-
-            # polymiRTS
-            # http://lily.uthsc.edu:8080/20090422_UTHSC_cuiyan/PolymiRTS_CLS?chrom=2&chrom_from=115&chrom_to=125
-            #XZ: We can NOT assume their web service is always on. We must put this block of code in try except.
-            try:
-                conn = http.client.HTTPConnection("lily.uthsc.edu:8080")
-                conn.request("GET", "/20090422_UTHSC_cuiyan/PolymiRTS_CLS?chrom=%s&chrom_from=%s&chrom_to=%s" % (self.genotype[0].name, self.startMb, self.endMb))
-                response = conn.getresponse()
-                data = response.read()
-                data = data.split()
-                conn.close()
-                dic = {}
-                index = 0
-                for i in data:
-                    if index%3==0:
-                        dic[data[index]] = HT.Href(url=data[index+2], text=data[index+1], target="_blank", Class="normalsize")
-                    index = index+1
-            except Exception:
-                dic={}
-
             for gIndex, theGO in enumerate(geneCol):
 
                 tableIterationsCnt = tableIterationsCnt + 1
@@ -2894,7 +2092,6 @@ class MarkerRegression(object):
                 txEnd = theGO["TxEnd"]
                 theGO["snpDensity"] = theGO["snpCount"]/geneLength
                 if self.ALEX_DEBUG_BOOL_PRINT_GENE_LIST:
-                    #accessionString = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=Display&DB=gene&term=%s'  % theGO["NM_ID"]
                     geneIdString = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=Graphics&list_uids=%s' % theGO["GeneID"]
 
                     allProbeString = '%s?cmd=sch&gene=%s&alias=1' % (os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), theGO["GeneSymbol"])
@@ -2907,10 +2104,6 @@ class MarkerRegression(object):
 
                     mouseStartString = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=Mouse&db=mm9&position=chr" + theGO["Chromosome"] + "%3A" + str(int(theGO["TxStart"] * 1000000.0))  + "-" + str(int(theGO["TxEnd"]*1000000.0)) +"&pix=620&Submit=submit"
 
-                    #Used for sorting
-                    mouseStartValue = int(theGO["TxStart"])
-
-
                     #the chromosomes for human 1 are 1qXX.XX
                     if theGO['humanGene']:
                         if theGO['humanGene']["TxStart"] == '':
@@ -2919,20 +2112,11 @@ class MarkerRegression(object):
                             humanStartDisplay = "%0.6f" % theGO['humanGene']["TxStart"]
 
                         humanChr = theGO['humanGene']["Chromosome"]
-                        if humanChr.find('q'):
-                            humanChrSort = humanChr[:humanChr.find("q")].join(humanChr[(humanChr.find("q")+1):]) #value used when sorting table
-                        elif humanChr.find('p'):
-                            humanChrSort = humanChr[:humanChr.find("p")].join(humanChr[(humanChr.find("p")+1):]) #value used when sorting table
-                        else:
-                            humanChrSort = humanChr
                         humanTxStart = theGO['humanGene']["TxStart"]
-
-                        #Used for sorting
-                        humanStartValue = float(theGO['humanGene']["TxStart"])
 
                         humanStartString = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=Human&db=hg17&position=chr%s:%d-%d" %  (humanChr, int(1000000*theGO['humanGene']["TxStart"]), int(1000000*theGO['humanGene']["TxEnd"]))
                     else:
-                        humanStartString = humanChr = humanChrSort = humanStartDisplay = humanStartValue = "--"
+                        humanStartString = humanChr = humanStartDisplay = "--"
 
                     geneDescription = theGO["GeneDescription"]
                     if len(geneDescription) > 26:
@@ -2950,22 +2134,12 @@ class MarkerRegression(object):
                     else:
                         avgExpr = "%0.6f" % avgExpr
 
-                    # polymiRTS
-                    polymiRTS = ' '
-                    if theGO["GeneID"] in dic:
-                        polymiRTS = dic[theGO["GeneID"]]
-
                     # If we have a referenceGene then we will show the Literature Correlation
                     if theGO["Chromosome"] == "X":
                         chr_as_int = 19
                     else:
                         chr_as_int = int(theGO["Chromosome"]) - 1
                     if refGene:
-                        try:
-                            literatureCorrelation = self.getLiteratureCorrelation(self.cursor,refGene,theGO['GeneID'])
-                        except:
-                            literatureCorrelation = "N/A"
-
                         literatureCorrelationString = str(self.getLiteratureCorrelation(self.cursor,refGene,theGO['GeneID']) or "N/A")
 
                         this_row = [selectCheck.__str__(),
@@ -2981,7 +2155,6 @@ class MarkerRegression(object):
                                     literatureCorrelationString,
                                     geneDescription]
                     else:
-
                         this_row = [selectCheck.__str__(),
                                     str(tableIterationsCnt),
                                     HT.Href(geneIdString, theGO["GeneSymbol"], target="_blank").__str__() +  "&nbsp;" + probeSetSearch.__str__(),
@@ -2995,10 +2168,9 @@ class MarkerRegression(object):
                                     geneDescription]
 
                 gene_table_body.append(this_row)
+
         elif self.dataset.group.species == 'rat':
-
             for gIndex, theGO in enumerate(geneCol):
-
                 this_row = [] #container for the cells of each row
                 selectCheck = HT.Input(type="checkbox", name="searchResult", Class="checkbox", onClick="highlight(this)").__str__() #checkbox for each row
 
@@ -3015,7 +2187,6 @@ class MarkerRegression(object):
                     chr_as_int = int(theGO["Chromosome"]) - 1
 
                 geneLength = (float(theGO["TxEnd"]) - float(theGO["TxStart"]))
-                #geneLengthURL = "javascript:centerIntervalMapOnRange2('%s', %f, %f, document.changeViewForm)" % (theGO["Chromosome"], float(theGO["TxStart"])-(geneLength*0.1), float(theGO["TxEnd"])+(geneLength*0.1))
                 geneLengthURL = "javascript:rangeView('%s', %f, %f)" % (theGO["Chromosome"], float(theGO["TxStart"])-(geneLength*0.1), float(theGO["TxEnd"])+(geneLength*0.1))
 
                 avgExprVal = []
@@ -3034,15 +2205,9 @@ class MarkerRegression(object):
                 #the chromosomes for human 1 are 1qXX.XX
                 if theGO['humanGene']:
                     humanChr = theGO['humanGene']["Chromosome"]
-                    if 'q' in humanChr:
-                        humanChrSort = humanChr[:humanChr.find("q")].join(humanChr[(humanChr.find("q")+1):]) #value used when sorting table
-                    elif 'p' in humanChr:
-                        humanChrSort = humanChr[:humanChr.find("p")].join(humanChr[(humanChr.find("p")+1):]) #value used when sorting table
-                    else:
-                        humanChrSort = humanChr
                     humanTxStart = theGO['humanGene']["TxStart"]
                 else:
-                    humanChr = humanTxStart = humanChrSort = ""
+                    humanChr = humanTxStart = ""
 
                 geneDesc = theGO["GeneDescription"]
                 if geneDesc == "---":
@@ -3062,11 +2227,7 @@ class MarkerRegression(object):
 
                 gene_table_body.append(this_row)
 
-        else:
-            pass
-
         return gene_table_body
-        #return tblobj_body
 
     def getLiteratureCorrelation(cursor,geneId1=None,geneId2=None):
         if not geneId1 or not geneId2:
@@ -3086,9 +2247,3 @@ class MarkerRegression(object):
                     break
         except: raise #lCorr = None
         return lCorr
-
-    def getSortByValue(self):
-
-        sortby = ("", "")
-
-        return sortby
