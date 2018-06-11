@@ -97,17 +97,29 @@ def print_help(args, parser):
 def generate_data_parser(args, parser):
     print("Generating data parser...")
 
+def parse_offset(offset_str):
+    offset = tuple(map(int, offset_str.split(",")))
+    return offset
+
 def bar_plotter(args):
+    canvas = pid.PILCanvas(size=(args.canvaslength,args.canvaswidth))
+    data = json.loads(args.data)
     barcolour = get_colour(args.barcolor)
     axescolour = get_colour(args.axescolor)
-    data = json.loads(args.data)
-    print("DATA:", data)
-    print("ARGS:", args)
+    labelcolour = get_colour(args.labelcolor)
+    xlabel = args.xlabel
+    ylabel = args.ylabel
+    title = args.title
+    offset = parse_offset(args.offset)
+    zoom = args.zoom
+    filename = args.filename
+    imgformat = args.imgformat
 
-def get_canvas(args):
-    size=(args.canvaslength, args.canvaswidth)
-    canvas = pid.PILCanvas(size=size)
-    return cPickle.dumps(canvas)
+    print("DATA:", data, offset, title)
+    print("ARGS:", args)
+    return
+    plotBar(canvas, data, barColor=barcolour, axesColor=axescolour, labelColor=labelcolour, XLabel=None, YLabel=None, title=None, offset= (60, 20, 40, 40), zoom = 1)
+    canvas.save(filename, format=imgformat);
 
 def get_colour(colour_str):
     colour = None
@@ -131,16 +143,10 @@ def select_action(args, parser):
     fn(args)
 
 # You can run this with something like
-# python -m wqflask.utility.piddle_drawer plotbar /tmp/test.png --data "(lp1
-# S'this'
-# p2
-# aS'is'
-# p3
-# aS'the'
-# p4
-# aS'data'
-# p5
-# a."
+# python -m wqflask.utility.piddle_drawer plotbar /tmp/test.png --data "{\
+#    \"key1\":\"value1\",
+#    \"key2\":\"value2\"
+#    }"
 if __name__ == '__main__':
     desc = """
 piddle_drawer - This is an attempt to replace usage of the piddle module  with a
@@ -153,6 +159,8 @@ piddle_drawer - This is an attempt to replace usage of the piddle module  with a
     parser.add_argument("filename", help="Filename of generated image")
     parser.add_argument("--imgformat", help="Format of generated image",
                         default="gif", choices=["gif", "png", "bmp"])
+    parser.add_argument("-t", "--title", help="Title for the generated image",
+                        default="untitled")
     parser.add_argument("-cvl", "--canvaslength", help="""Length of canvas (
 default: 400)""", default=400, type=int)
     parser.add_argument("-cvw", "--canvaswidth", help="""Width of canvas (
@@ -162,6 +170,9 @@ default: 300)""", default=300, type=int)
                         default="blue")
     parser.add_argument("-ac", "--axescolor",
                         help="The colour of axes (default: black)",
+                        default="black")
+    parser.add_argument("-lc", "--labelcolor",
+                        help="The colour of label (default: black)",
                         default="black")
     parser.add_argument("-xl", "--xlabel", help="The label for the X-axis")
     parser.add_argument("-yl", "--ylabel", help="The label for the Y-axis")
