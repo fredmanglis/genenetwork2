@@ -26,7 +26,7 @@
 
 
 
-import piddle as pid
+# import piddle as pid
 from pprint import pformat as pf
 
 from math import *
@@ -35,10 +35,10 @@ import sys, os
 from numpy import linalg as la
 from numpy import ones, array, dot, swapaxes
 
-import reaper
+# import reaper
 
-import webqtlUtil
-import corestats
+from . import webqtlUtil
+from . import corestats
 from base import webqtlConfig
 
 import utility.logger
@@ -120,90 +120,32 @@ def find_outliers(vals):
 
 # parameter: data is either object returned by reaper permutation function (called by MarkerRegressionPage.py)
 # or the first object returned by direct (pair-scan) permu function (called by DirectPlotPage.py)
-def plotBar(canvas, data, barColor=pid.blue, axesColor=pid.black, labelColor=pid.black, XLabel=None, YLabel=None, title=None, offset= (60, 20, 40, 40), zoom = 1):
-    xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
+def plotBar(data, filename, barColor="blue", axesColor="black", labelColor="black", XLabel=None, YLabel=None, title=None, offset= (60, 20, 40, 40), zoom = 1):
+    import subprocess
 
-    plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
-    plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
-    if plotHeight<=0 or plotWidth<=0:
-       return
+    cmd_list = [
+        "env", "PYTHONPATH={}".format(utility.tools.PYTHON2_PROFILE),
+        os.environ."PYTHON2_PROFILE/bin/python", "-m",
+        "wqflask.utility.piddle_drawer", "plotbar", filename,
+        "--data='{}'".format(json.dumps(data)),
+        "--barcolor={}".format(barColor), "--axescolor={}".format(axesColor),
+        "--labelcolor={}".format(labelcolor},
+        "--offset={}".format(",".join(map(str, tp))), "--zoom={}".format(zoom)
+    ]
 
-    if len(data) < 2:
-       return
+    if title:
+        cmd_list.append("--title={}".format(title))
 
-    max_D = max(data)
-    min_D = min(data)
-    #add by NL 06-20-2011: fix the error: when max_D is infinite, log function in detScale will go wrong
-    if max_D == float('inf') or max_D>webqtlConfig.MAXLRS:
-       max_D=webqtlConfig.MAXLRS #maximum LRS value
-
-    xLow, xTop, stepX = detScale(min_D, max_D)
-
-    #reduce data
-    #ZS: Used to determine number of bins for permutation output
-    step = ceil((xTop-xLow)/50.0)
-    j = xLow
-    dataXY = []
-    Count = []
-    while j <= xTop:
-       dataXY.append(j)
-       Count.append(0)
-       j += step
-
-    for i, item in enumerate(data):
-       if item == float('inf') or item>webqtlConfig.MAXLRS:
-           item = webqtlConfig.MAXLRS #maximum LRS value
-       j = int((item-xLow)/step)
-       Count[j] += 1
-
-    yLow, yTop, stepY=detScale(0,max(Count))
-
-    #draw data
-    xScale = plotWidth/(xTop-xLow)
-    yScale = plotHeight/(yTop-yLow)
-    barWidth = xScale*step
-
-    for i, count in enumerate(Count):
-       if count:
-           xc = (dataXY[i]-xLow)*xScale+xLeftOffset
-           yc =-(count-yLow)*yScale+yTopOffset+plotHeight
-           canvas.drawRect(xc+2,yc,xc+barWidth-2,yTopOffset+plotHeight,edgeColor=barColor,fillColor=barColor)
-
-    #draw drawing region
-    canvas.drawRect(xLeftOffset, yTopOffset, xLeftOffset+plotWidth, yTopOffset+plotHeight)
-
-    #draw scale
-    scaleFont=pid.Font(ttf="cour",size=11,bold=1)
-    x=xLow
-    for i in range(int(stepX)+1):
-       xc=xLeftOffset+(x-xLow)*xScale
-       canvas.drawLine(xc,yTopOffset+plotHeight,xc,yTopOffset+plotHeight+5, color=axesColor)
-       strX = cformat(d=x, rank=0)
-       canvas.drawString(strX,xc-canvas.stringWidth(strX,font=scaleFont)/2,yTopOffset+plotHeight+14,font=scaleFont)
-       x+= (xTop - xLow)/stepX
-
-    y=yLow
-    for i in range(int(stepY)+1):
-       yc=yTopOffset+plotHeight-(y-yLow)*yScale
-       canvas.drawLine(xLeftOffset,yc,xLeftOffset-5,yc, color=axesColor)
-       strY = "%d" %y
-       canvas.drawString(strY,xLeftOffset-canvas.stringWidth(strY,font=scaleFont)-6,yc+5,font=scaleFont)
-       y+= (yTop - yLow)/stepY
-
-    #draw label
-    labelFont=pid.Font(ttf="tahoma",size=17,bold=0)
     if XLabel:
-       canvas.drawString(XLabel,xLeftOffset+(plotWidth-canvas.stringWidth(XLabel,font=labelFont))/2.0,
-               yTopOffset+plotHeight+yBottomOffset-10,font=labelFont,color=labelColor)
+        cmd_list.append("--xlabel={}".format(XLabel))
 
     if YLabel:
-       canvas.drawString(YLabel, 19, yTopOffset+plotHeight-(plotHeight-canvas.stringWidth(YLabel,font=labelFont))/2.0,
-               font=labelFont,color=labelColor,angle=90)
+        cmd_list.append("--ylabel={}".format(YLabel))
 
-    labelFont=pid.Font(ttf="verdana",size=16,bold=0)
-    if title:
-       canvas.drawString(title,xLeftOffset+(plotWidth-canvas.stringWidth(title,font=labelFont))/2.0,
-               20,font=labelFont,color=labelColor)
+    results = subprocess.run(cmd_list, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    err = results.stderr.decode("utf-8")
+    if err:
+        raise RuntimeError("Piddle drawer failed with {}".format(err)
 
 # This function determines the scale of the plot
 def detScaleOld(min,max):
