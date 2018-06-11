@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import sys
-import cPickle
+import json
 import argparse
 import piddle as pid
 
@@ -100,8 +100,7 @@ def generate_data_parser(args, parser):
 def bar_plotter(args):
     barcolour = get_colour(args.barcolor)
     axescolour = get_colour(args.axescolor)
-    print("RAW DATA =======>", args.data)
-    data = unpickle(args.data)
+    data = json.loads(args.data)
     print("DATA:", data)
     print("ARGS:", args)
 
@@ -122,12 +121,6 @@ def get_colour(colour_str):
         return colour
     else:
         raise RuntimeError("Invalid colour: "+colour_str)
-
-def pickle(obj):
-    return cPickle.dumps(obj)
-
-def unpickle(raw_data):
-    return cPickle.loads(raw_data)
 
 def select_action(args, parser):
     actions = {
