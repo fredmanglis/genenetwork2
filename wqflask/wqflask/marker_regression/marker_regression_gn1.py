@@ -2009,7 +2009,6 @@ class MarkerRegression(object):
         #########################################
         #      Permutation Graph
         #########################################
-        myCanvas = pid.PILCanvas(size=(400,300))
         if 'lod_score' in self.qtlresults[0] and self.LRS_LOD == "LRS":
             perm_output = [value*4.16 for value in self.perm_output]
         elif 'lod_score' not in self.qtlresults[0] and self.LRS_LOD == "LOD":
@@ -2017,10 +2016,8 @@ class MarkerRegression(object):
         else:
             perm_output = self.perm_output
 
-        Plot.plotBar(myCanvas, perm_output, XLabel=self.LRS_LOD, YLabel='Frequency', title=' Histogram of Permutation Test')
-        filename= webqtlUtil.genRandStr("Reg_")
-        myCanvas.save(GENERATED_IMAGE_DIR+filename, format='gif')
-
+        filename= GENERATED_IMAGE_DIR+webqtlUtil.genRandStr("Reg_")
+        Plot.plotBar(perm_output, filename=filename, XLabel=self.LRS_LOD, YLabel='Frequency', title=' Histogram of Permutation Test')
         return filename
 
     def geneTable(self, geneCol, refGene=None):
