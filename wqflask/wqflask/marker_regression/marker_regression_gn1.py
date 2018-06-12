@@ -500,208 +500,208 @@ class MarkerRegression(object):
         if self.traitList and self.traitList[0].dataset and self.traitList[0].dataset.type == 'Geno':
             btminfo.append(HT.BR(), 'Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
 
-    def plotIntMapping(self, canvas, offset= (80, 120, 20, 100), zoom = 1, startMb = None, endMb = None, showLocusForm = ""):
-        #calculating margins
-        xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
-        if self.multipleInterval:
-            yTopOffset = max(80, yTopOffset)
-        else:
-            if self.legendChecked:
-                yTopOffset = max(80, yTopOffset)
-            else:
-                pass
+    # def plotIntMapping(self, canvas, offset= (80, 120, 20, 100), zoom = 1, startMb = None, endMb = None, showLocusForm = ""):
+#         #calculating margins
+#         xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
+#         if self.multipleInterval:
+#             yTopOffset = max(80, yTopOffset)
+#         else:
+#             if self.legendChecked:
+#                 yTopOffset = max(80, yTopOffset)
+#             else:
+#                 pass
 
-        if self.plotScale != 'physic':
-            yBottomOffset = max(120, yBottomOffset)
-        fontZoom = zoom
-        if zoom == 2:
-            xLeftOffset += 20
-            fontZoom = 1.5
+#         if self.plotScale != 'physic':
+#             yBottomOffset = max(120, yBottomOffset)
+#         fontZoom = zoom
+#         if zoom == 2:
+#             xLeftOffset += 20
+#             fontZoom = 1.5
 
-        xLeftOffset = int(xLeftOffset*fontZoom)
-        xRightOffset = int(xRightOffset*fontZoom)
-        yBottomOffset = int(yBottomOffset*fontZoom)
+#         xLeftOffset = int(xLeftOffset*fontZoom)
+#         xRightOffset = int(xRightOffset*fontZoom)
+#         yBottomOffset = int(yBottomOffset*fontZoom)
 
-        cWidth = canvas.size[0]
-        cHeight = canvas.size[1]
-        plotWidth = cWidth - xLeftOffset - xRightOffset
-        plotHeight = cHeight - yTopOffset - yBottomOffset
+#         cWidth = canvas.size[0]
+#         cHeight = canvas.size[1]
+#         plotWidth = cWidth - xLeftOffset - xRightOffset
+#         plotHeight = cHeight - yTopOffset - yBottomOffset
 
-        #Drawing Area Height
-        drawAreaHeight = plotHeight
-        if self.plotScale == 'physic' and self.selectedChr > -1:
-            drawAreaHeight -= self.ENSEMBL_BAND_HEIGHT + self.UCSC_BAND_HEIGHT+ self.WEBQTL_BAND_HEIGHT + 3*self.BAND_SPACING+ 10*zoom
-            if self.geneChecked:
-                drawAreaHeight -= self.NUM_GENE_ROWS*self.EACH_GENE_HEIGHT + 3*self.BAND_SPACING + 10*zoom
-        else:
-            if self.selectedChr > -1:
-                drawAreaHeight -= 20
-            else:
-                drawAreaHeight -= 30
+#         #Drawing Area Height
+#         drawAreaHeight = plotHeight
+#         if self.plotScale == 'physic' and self.selectedChr > -1:
+#             drawAreaHeight -= self.ENSEMBL_BAND_HEIGHT + self.UCSC_BAND_HEIGHT+ self.WEBQTL_BAND_HEIGHT + 3*self.BAND_SPACING+ 10*zoom
+#             if self.geneChecked:
+#                 drawAreaHeight -= self.NUM_GENE_ROWS*self.EACH_GENE_HEIGHT + 3*self.BAND_SPACING + 10*zoom
+#         else:
+#             if self.selectedChr > -1:
+#                 drawAreaHeight -= 20
+#             else:
+#                 drawAreaHeight -= 30
 
-## BEGIN HaplotypeAnalyst
-        if self.haplotypeAnalystChecked and self.selectedChr > -1:
-            drawAreaHeight -= self.EACH_GENE_HEIGHT * (self.NR_INDIVIDUALS+10) * 2 * zoom
-## END HaplotypeAnalyst
+# ## BEGIN HaplotypeAnalyst
+#         if self.haplotypeAnalystChecked and self.selectedChr > -1:
+#             drawAreaHeight -= self.EACH_GENE_HEIGHT * (self.NR_INDIVIDUALS+10) * 2 * zoom
+# ## END HaplotypeAnalyst
 
-        if zoom == 2:
-            drawAreaHeight -= 60
+#         if zoom == 2:
+#             drawAreaHeight -= 60
 
-        #Image map
-        gifmap = HT.Map(name = "WebQTLImageMap")
+#         #Image map
+#         gifmap = HT.Map(name = "WebQTLImageMap")
 
-        newoffset = (xLeftOffset, xRightOffset, yTopOffset, yBottomOffset)
-        # Draw the alternating-color background first and get plotXScale
-        plotXScale = self.drawGraphBackground(canvas, gifmap, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
+#         newoffset = (xLeftOffset, xRightOffset, yTopOffset, yBottomOffset)
+#         # Draw the alternating-color background first and get plotXScale
+#         plotXScale = self.drawGraphBackground(canvas, gifmap, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
 
-        #draw bootstap
-        if self.bootChecked and not self.multipleInterval and not self.manhattan_plot:
-            self.drawBootStrapResult(canvas, self.nboot, drawAreaHeight, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
+#         #draw bootstap
+#         if self.bootChecked and not self.multipleInterval and not self.manhattan_plot:
+#             self.drawBootStrapResult(canvas, self.nboot, drawAreaHeight, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
 
-        # Draw clickable region and gene band if selected
-        if self.plotScale == 'physic' and self.selectedChr > -1:
-            self.drawClickBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-            if self.geneChecked and self.geneCol:
-                self.drawGeneBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-            if self.SNPChecked:
-                self.drawSNPTrackNew(canvas, offset=newoffset, zoom = 2*zoom, startMb=startMb, endMb = endMb)
-## BEGIN HaplotypeAnalyst
-            if self.haplotypeAnalystChecked:
-                self.drawHaplotypeBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-## END HaplotypeAnalyst
-        # Draw X axis
-        self.drawXAxis(canvas, drawAreaHeight, gifmap, plotXScale, showLocusForm, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-        # Draw QTL curve
-        self.drawQTL(canvas, drawAreaHeight, gifmap, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
+#         # Draw clickable region and gene band if selected
+#         if self.plotScale == 'physic' and self.selectedChr > -1:
+#             self.drawClickBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
+#             if self.geneChecked and self.geneCol:
+#                 self.drawGeneBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
+#             if self.SNPChecked:
+#                 self.drawSNPTrackNew(canvas, offset=newoffset, zoom = 2*zoom, startMb=startMb, endMb = endMb)
+# ## BEGIN HaplotypeAnalyst
+#             if self.haplotypeAnalystChecked:
+#                 self.drawHaplotypeBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
+# ## END HaplotypeAnalyst
+#         # Draw X axis
+#         self.drawXAxis(canvas, drawAreaHeight, gifmap, plotXScale, showLocusForm, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
+#         # Draw QTL curve
+#         self.drawQTL(canvas, drawAreaHeight, gifmap, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
 
-        #draw legend
-        if self.multipleInterval:
-            self.drawMultiTraitName(fd, canvas, gifmap, showLocusForm, offset=newoffset)
-        elif self.legendChecked:
-            self.drawLegendPanel(canvas, offset=newoffset, zoom = zoom)
-        else:
-            pass
+#         #draw legend
+#         if self.multipleInterval:
+#             self.drawMultiTraitName(fd, canvas, gifmap, showLocusForm, offset=newoffset)
+#         elif self.legendChecked:
+#             self.drawLegendPanel(canvas, offset=newoffset, zoom = zoom)
+#         else:
+#             pass
 
-        #draw position, no need to use a separate function
-        self.drawProbeSetPosition(canvas, plotXScale, offset=newoffset, zoom = zoom)
+#         #draw position, no need to use a separate function
+#         self.drawProbeSetPosition(canvas, plotXScale, offset=newoffset, zoom = zoom)
 
-        return gifmap
+#         return gifmap
 
-    def drawBootStrapResult(self, canvas, nboot, drawAreaHeight, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
-        xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
-        plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
-        plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
-        yZero = canvas.size[1] - yBottomOffset
-        fontZoom = zoom
-        if zoom == 2:
-            fontZoom = 1.5
+    # def drawBootStrapResult(self, canvas, nboot, drawAreaHeight, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
+    #     xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
+    #     plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
+    #     plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
+    #     yZero = canvas.size[1] - yBottomOffset
+    #     fontZoom = zoom
+    #     if zoom == 2:
+    #         fontZoom = 1.5
 
-        bootHeightThresh = drawAreaHeight*3/4
+    #     bootHeightThresh = drawAreaHeight*3/4
 
-        #break bootstrap result into groups
-        BootCoord = []
-        i = 0
-        startX = xLeftOffset
+    #     #break bootstrap result into groups
+    #     BootCoord = []
+    #     i = 0
+    #     startX = xLeftOffset
 
-        if self.selectedChr == -1: #ZS: If viewing full genome/all chromosomes
-            for j, _chr in enumerate(self.genotype):
-                BootCoord.append( [])
-                for _locus in _chr:
-                    if self.plotScale == 'physic':
-                        Xc = startX + (_locus.Mb-self.startMb)*plotXScale
-                    else:
-                        Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
-                    BootCoord[-1].append([Xc, self.bootResult[i]])
-                    i += 1
-                startX += (self.ChrLengthDistList[j] + self.GraphInterval)*plotXScale
-        else:
-            for j, _chr in enumerate(self.genotype):
-                if _chr.name == self.ChrList[self.selectedChr][0]:
-                    BootCoord.append( [])
-                for _locus in _chr:
-                    if _chr.name == self.ChrList[self.selectedChr][0]:
-                        if self.plotScale == 'physic':
-                            Xc = startX + (_locus.Mb-startMb)*plotXScale
-                        else:
-                            Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
-                        BootCoord[-1].append([Xc, self.bootResult[i]])
-                    i += 1
+    #     if self.selectedChr == -1: #ZS: If viewing full genome/all chromosomes
+    #         for j, _chr in enumerate(self.genotype):
+    #             BootCoord.append( [])
+    #             for _locus in _chr:
+    #                 if self.plotScale == 'physic':
+    #                     Xc = startX + (_locus.Mb-self.startMb)*plotXScale
+    #                 else:
+    #                     Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
+    #                 BootCoord[-1].append([Xc, self.bootResult[i]])
+    #                 i += 1
+    #             startX += (self.ChrLengthDistList[j] + self.GraphInterval)*plotXScale
+    #     else:
+    #         for j, _chr in enumerate(self.genotype):
+    #             if _chr.name == self.ChrList[self.selectedChr][0]:
+    #                 BootCoord.append( [])
+    #             for _locus in _chr:
+    #                 if _chr.name == self.ChrList[self.selectedChr][0]:
+    #                     if self.plotScale == 'physic':
+    #                         Xc = startX + (_locus.Mb-startMb)*plotXScale
+    #                     else:
+    #                         Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
+    #                     BootCoord[-1].append([Xc, self.bootResult[i]])
+    #                 i += 1
 
-        #reduce bootResult
-        if self.selectedChr > -1:
-            maxBootBar = 80.0
-        else:
-            maxBootBar = 200.0
-        stepBootStrap = plotWidth/maxBootBar
-        reducedBootCoord = []
-        maxBootCount = 0
+    #     #reduce bootResult
+    #     if self.selectedChr > -1:
+    #         maxBootBar = 80.0
+    #     else:
+    #         maxBootBar = 200.0
+    #     stepBootStrap = plotWidth/maxBootBar
+    #     reducedBootCoord = []
+    #     maxBootCount = 0
 
-        for BootChrCoord in BootCoord:
-            nBoot = len(BootChrCoord)
-            bootStartPixX = BootChrCoord[0][0]
-            bootCount = BootChrCoord[0][1]
-            for i in range(1, nBoot):
-                if BootChrCoord[i][0] - bootStartPixX < stepBootStrap:
-                    bootCount += BootChrCoord[i][1]
-                    continue
-                else:
-                    if maxBootCount < bootCount:
-                        maxBootCount = bootCount
-                    # end if
-                    reducedBootCoord.append([bootStartPixX, BootChrCoord[i][0], bootCount])
-                    bootStartPixX = BootChrCoord[i][0]
-                    bootCount = BootChrCoord[i][1]
-                # end else
-            # end for
-            #add last piece
-            if BootChrCoord[-1][0] - bootStartPixX  > stepBootStrap/2.0:
-                reducedBootCoord.append([bootStartPixX, BootChrCoord[-1][0], bootCount])
-            else:
-                reducedBootCoord[-1][2] += bootCount
-                reducedBootCoord[-1][1] = BootChrCoord[-1][0]
-            # end else
-            if maxBootCount < reducedBootCoord[-1][2]:
-                maxBootCount = reducedBootCoord[-1][2]
-            # end if
-        for item in reducedBootCoord:
-            if item[2] > 0:
-                if item[0] < xLeftOffset:
-                    item[0] = xLeftOffset
-                if item[0] > xLeftOffset+plotWidth:
-                    item[0] = xLeftOffset+plotWidth
-                if item[1] < xLeftOffset:
-                    item[1] = xLeftOffset
-                if item[1] > xLeftOffset+plotWidth:
-                    item[1] = xLeftOffset+plotWidth
-                if item[0] != item[1]:
-                    canvas.drawRect(item[0], yZero, item[1], yZero - item[2]*bootHeightThresh/maxBootCount,
-                    fillColor=self.BOOTSTRAP_BOX_COLOR)
+    #     for BootChrCoord in BootCoord:
+    #         nBoot = len(BootChrCoord)
+    #         bootStartPixX = BootChrCoord[0][0]
+    #         bootCount = BootChrCoord[0][1]
+    #         for i in range(1, nBoot):
+    #             if BootChrCoord[i][0] - bootStartPixX < stepBootStrap:
+    #                 bootCount += BootChrCoord[i][1]
+    #                 continue
+    #             else:
+    #                 if maxBootCount < bootCount:
+    #                     maxBootCount = bootCount
+    #                 # end if
+    #                 reducedBootCoord.append([bootStartPixX, BootChrCoord[i][0], bootCount])
+    #                 bootStartPixX = BootChrCoord[i][0]
+    #                 bootCount = BootChrCoord[i][1]
+    #             # end else
+    #         # end for
+    #         #add last piece
+    #         if BootChrCoord[-1][0] - bootStartPixX  > stepBootStrap/2.0:
+    #             reducedBootCoord.append([bootStartPixX, BootChrCoord[-1][0], bootCount])
+    #         else:
+    #             reducedBootCoord[-1][2] += bootCount
+    #             reducedBootCoord[-1][1] = BootChrCoord[-1][0]
+    #         # end else
+    #         if maxBootCount < reducedBootCoord[-1][2]:
+    #             maxBootCount = reducedBootCoord[-1][2]
+    #         # end if
+    #     for item in reducedBootCoord:
+    #         if item[2] > 0:
+    #             if item[0] < xLeftOffset:
+    #                 item[0] = xLeftOffset
+    #             if item[0] > xLeftOffset+plotWidth:
+    #                 item[0] = xLeftOffset+plotWidth
+    #             if item[1] < xLeftOffset:
+    #                 item[1] = xLeftOffset
+    #             if item[1] > xLeftOffset+plotWidth:
+    #                 item[1] = xLeftOffset+plotWidth
+    #             if item[0] != item[1]:
+    #                 canvas.drawRect(item[0], yZero, item[1], yZero - item[2]*bootHeightThresh/maxBootCount,
+    #                 fillColor=self.BOOTSTRAP_BOX_COLOR)
 
-        ###draw boot scale
-        highestPercent = (maxBootCount*100.0)/nboot
-        bootScale = Plot.detScale(0, highestPercent)
-        bootScale = Plot.frange(bootScale[0], bootScale[1], bootScale[1]/bootScale[2])
-        bootScale = bootScale[:-1] + [highestPercent]
+    #     ###draw boot scale
+    #     highestPercent = (maxBootCount*100.0)/nboot
+    #     bootScale = Plot.detScale(0, highestPercent)
+    #     bootScale = Plot.frange(bootScale[0], bootScale[1], bootScale[1]/bootScale[2])
+    #     bootScale = bootScale[:-1] + [highestPercent]
 
-        bootOffset = 50*fontZoom
-        bootScaleFont=pid.Font(ttf="verdana",size=13*fontZoom,bold=0)
-        canvas.drawRect(canvas.size[0]-bootOffset,yZero-bootHeightThresh,canvas.size[0]-bootOffset-15*zoom,yZero,fillColor = pid.yellow)
-        canvas.drawLine(canvas.size[0]-bootOffset+4, yZero, canvas.size[0]-bootOffset, yZero, color=pid.black)
-        canvas.drawString('0%' ,canvas.size[0]-bootOffset+10,yZero+5,font=bootScaleFont,color=pid.black)
-        for item in bootScale:
-            if item == 0:
-                continue
-            bootY = yZero-bootHeightThresh*item/highestPercent
-            canvas.drawLine(canvas.size[0]-bootOffset+4,bootY,canvas.size[0]-bootOffset,bootY,color=pid.black)
-            canvas.drawString('%2.1f'%item ,canvas.size[0]-bootOffset+10,bootY+5,font=bootScaleFont,color=pid.black)
+    #     bootOffset = 50*fontZoom
+    #     bootScaleFont=pid.Font(ttf="verdana",size=13*fontZoom,bold=0)
+    #     canvas.drawRect(canvas.size[0]-bootOffset,yZero-bootHeightThresh,canvas.size[0]-bootOffset-15*zoom,yZero,fillColor = pid.yellow)
+    #     canvas.drawLine(canvas.size[0]-bootOffset+4, yZero, canvas.size[0]-bootOffset, yZero, color=pid.black)
+    #     canvas.drawString('0%' ,canvas.size[0]-bootOffset+10,yZero+5,font=bootScaleFont,color=pid.black)
+    #     for item in bootScale:
+    #         if item == 0:
+    #             continue
+    #         bootY = yZero-bootHeightThresh*item/highestPercent
+    #         canvas.drawLine(canvas.size[0]-bootOffset+4,bootY,canvas.size[0]-bootOffset,bootY,color=pid.black)
+    #         canvas.drawString('%2.1f'%item ,canvas.size[0]-bootOffset+10,bootY+5,font=bootScaleFont,color=pid.black)
 
-        if self.legendChecked:
-            startPosY = 30
-            nCol = 2
-            smallLabelFont = pid.Font(ttf="trebuc", size=12*fontZoom, bold=1)
-            leftOffset = xLeftOffset+(nCol-1)*200
-            canvas.drawRect(leftOffset,startPosY-6, leftOffset+12,startPosY+6, fillColor=pid.yellow)
-            canvas.drawString('Frequency of the Peak LRS',leftOffset+ 20, startPosY+5,font=smallLabelFont,color=pid.black)
+    #     if self.legendChecked:
+    #         startPosY = 30
+    #         nCol = 2
+    #         smallLabelFont = pid.Font(ttf="trebuc", size=12*fontZoom, bold=1)
+    #         leftOffset = xLeftOffset+(nCol-1)*200
+    #         canvas.drawRect(leftOffset,startPosY-6, leftOffset+12,startPosY+6, fillColor=pid.yellow)
+    #         canvas.drawString('Frequency of the Peak LRS',leftOffset+ 20, startPosY+5,font=smallLabelFont,color=pid.black)
 
     def drawProbeSetPosition(self, canvas, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
         if len(self.traitList) != 1:
