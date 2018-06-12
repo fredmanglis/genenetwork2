@@ -125,11 +125,11 @@ def plotBar(data, filename, barColor="blue", axesColor="black", labelColor="blac
 
     cmd_list = [
         "env", "PYTHONPATH={}".format(utility.tools.PYTHON2_PROFILE),
-        os.environ."PYTHON2_PROFILE/bin/python", "-m",
+        os.environ["PYTHON2_PROFILE/bin/python"], "-m",
         "wqflask.utility.piddle_drawer", "plotbar", filename,
         "--data='{}'".format(json.dumps(data)),
         "--barcolor={}".format(barColor), "--axescolor={}".format(axesColor),
-        "--labelcolor={}".format(labelcolor},
+        "--labelcolor={}".format(labelcolor),
         "--offset={}".format(",".join(map(str, tp))), "--zoom={}".format(zoom)
     ]
 
@@ -145,7 +145,7 @@ def plotBar(data, filename, barColor="blue", axesColor="black", labelColor="blac
     results = subprocess.run(cmd_list, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     err = results.stderr.decode("utf-8")
     if err:
-        raise RuntimeError("Piddle drawer failed with {}".format(err)
+        raise RuntimeError("Piddle drawer failed with {}".format(err))
 
 # This function determines the scale of the plot
 def detScaleOld(min,max):
