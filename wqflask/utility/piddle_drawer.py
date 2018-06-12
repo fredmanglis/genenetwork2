@@ -404,3 +404,80 @@ def drawBootStrapResult(data, canvas, nboot, drawAreaHeight, plotXScale, offset=
         leftOffset = xLeftOffset+(nCol-1)*200
         canvas.drawRect(leftOffset,startPosY-6, leftOffset+12,startPosY+6, fillColor=pid.yellow)
         canvas.drawString('Frequency of the Peak LRS',leftOffset+ 20, startPosY+5,font=smallLabelFont,color=pid.black)
+
+def drawGraphBackground(data, canvas, gifmap, offset= (80, 120, 80, 50), zoom = 1, startMb = None, endMb = None):
+    ##conditions
+    ##multiple Chromosome view
+    ##single Chromosome Physical
+    ##single Chromosome Genetic
+    xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
+    plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
+    plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
+    yBottom = yTopOffset+plotHeight
+    fontZoom = zoom
+    if zoom == 2:
+        fontZoom = 1.5
+        yTopOffset += 30
+
+    #calculate plot scale
+    if data.get("plotScale") != 'physic':
+        data["ChrLengthDistList"] = data.get("ChrLengthCMList")
+        drawRegionDistance = data.get("ChrLengthCMSum")
+    else:
+        data["ChrLengthDistList"] = data.get("ChrLengthMbList")
+        drawRegionDistance = data.get("ChrLengthMbSum")
+
+    if data.get("selectedChr") > -1: #single chromosome view
+        spacingAmt = plotWidth/13.5
+        i = 0
+        for startPix in Plot.frange(xLeftOffset, xLeftOffset+plotWidth, spacingAmt):
+            if (i % 2 == 0):
+                theBackColor = data.get("GRAPH_BACK_DARK_COLOR")
+            else:
+                theBackColor = data.get("GRAPH_BACK_LIGHT_COLOR")
+            i += 1
+            canvas.drawRect(startPix, yTopOffset, min(startPix+spacingAmt, xLeftOffset+plotWidth), \
+                    yBottom, edgeColor=theBackColor, fillColor=theBackColor)
+
+        drawRegionDistance = data.get("ChrLengthDistList")[data.get("ChrList")[data.get("selectedChr")][1]]
+        data["ChrLengthDistList"] = [drawRegionDistance]
+        if data.get("plotScale") == 'physic':
+            plotXScale = plotWidth / (endMb-startMb)
+        else:
+            plotXScale = plotWidth / drawRegionDistance
+
+    else:   #multiple chromosome view
+        plotXScale = plotWidth / ((len(data.get("genotype"))-1)*data.get("GraphInterval") + drawRegionDistance)
+
+        startPosX = xLeftOffset
+        if fontZoom == 1.5:
+            chrFontZoom = 2
+        else:
+            chrFontZoom = 1
+        chrLabelFont=pid.Font(ttf="verdana",size=24*chrFontZoom,bold=0)
+
+        for i, _chr in enumerate(data.get("genotype")):
+            if (i % 2 == 0):
+                theBackColor = data.get("GRAPH_BACK_DARK_COLOR")
+            else:
+                theBackColor = data.get("GRAPH_BACK_LIGHT_COLOR")
+
+            #draw the shaded boxes and the sig/sug thick lines
+            canvas.drawRect(startPosX, yTopOffset, startPosX + data.get("ChrLengthDistList")[i]*plotXScale, \
+                            yBottom, edgeColor=pid.gainsboro,fillColor=theBackColor)
+
+            chrNameWidth = canvas.stringWidth(_chr.name, font=chrLabelFont)
+            chrStartPix = startPosX + (data.get("ChrLengthDistList")[i]*plotXScale -chrNameWidth)/2
+            chrEndPix = startPosX + (data.get("ChrLengthDistList")[i]*plotXScale +chrNameWidth)/2
+
+            canvas.drawString(_chr.name, chrStartPix, yTopOffset + 20 ,font = chrLabelFont,color=pid.black)
+            COORDS = "%d,%d,%d,%d" %(chrStartPix, yTopOffset, chrEndPix,yTopOffset +20)
+
+            #add by NL 09-03-2010
+            HREF = "javascript:chrView(%d,%s);" % (i,data.get("ChrLengthMbList"))
+            #HREF = "javascript:changeView(%d,%s);" % (i,data.get("ChrLengthMbList"))
+            Areas = make_map_area(shape='rect',coords=COORDS,href=HREF)
+            gifmap.areas.append(Areas)
+            startPosX +=  (data.get("ChrLengthDistList")[i]+data.get("GraphInterval"))*plotXScale
+
+    return plotXScale

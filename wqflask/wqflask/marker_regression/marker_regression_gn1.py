@@ -1928,82 +1928,82 @@ class MarkerRegression(object):
         canvas.drawLine(xLeftOffset, yZero, xLeftOffset, yTopOffset + 30*(zoom - 1), color=self.LRS_COLOR, width=1*zoom)  #the blue line running up the y axis
 
 
-    def drawGraphBackground(self, canvas, gifmap, offset= (80, 120, 80, 50), zoom = 1, startMb = None, endMb = None):
-        ##conditions
-        ##multiple Chromosome view
-        ##single Chromosome Physical
-        ##single Chromosome Genetic
-        xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
-        plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
-        plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
-        yBottom = yTopOffset+plotHeight
-        fontZoom = zoom
-        if zoom == 2:
-            fontZoom = 1.5
-            yTopOffset += 30
+    # def drawGraphBackground(self, canvas, gifmap, offset= (80, 120, 80, 50), zoom = 1, startMb = None, endMb = None):
+    #     ##conditions
+    #     ##multiple Chromosome view
+    #     ##single Chromosome Physical
+    #     ##single Chromosome Genetic
+    #     xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
+    #     plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
+    #     plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
+    #     yBottom = yTopOffset+plotHeight
+    #     fontZoom = zoom
+    #     if zoom == 2:
+    #         fontZoom = 1.5
+    #         yTopOffset += 30
 
-        #calculate plot scale
-        if self.plotScale != 'physic':
-            self.ChrLengthDistList = self.ChrLengthCMList
-            drawRegionDistance = self.ChrLengthCMSum
-        else:
-            self.ChrLengthDistList = self.ChrLengthMbList
-            drawRegionDistance = self.ChrLengthMbSum
+    #     #calculate plot scale
+    #     if self.plotScale != 'physic':
+    #         self.ChrLengthDistList = self.ChrLengthCMList
+    #         drawRegionDistance = self.ChrLengthCMSum
+    #     else:
+    #         self.ChrLengthDistList = self.ChrLengthMbList
+    #         drawRegionDistance = self.ChrLengthMbSum
 
-        if self.selectedChr > -1: #single chromosome view
-            spacingAmt = plotWidth/13.5
-            i = 0
-            for startPix in Plot.frange(xLeftOffset, xLeftOffset+plotWidth, spacingAmt):
-                if (i % 2 == 0):
-                    theBackColor = self.GRAPH_BACK_DARK_COLOR
-                else:
-                    theBackColor = self.GRAPH_BACK_LIGHT_COLOR
-                i += 1
-                canvas.drawRect(startPix, yTopOffset, min(startPix+spacingAmt, xLeftOffset+plotWidth), \
-                        yBottom, edgeColor=theBackColor, fillColor=theBackColor)
+    #     if self.selectedChr > -1: #single chromosome view
+    #         spacingAmt = plotWidth/13.5
+    #         i = 0
+    #         for startPix in Plot.frange(xLeftOffset, xLeftOffset+plotWidth, spacingAmt):
+    #             if (i % 2 == 0):
+    #                 theBackColor = self.GRAPH_BACK_DARK_COLOR
+    #             else:
+    #                 theBackColor = self.GRAPH_BACK_LIGHT_COLOR
+    #             i += 1
+    #             canvas.drawRect(startPix, yTopOffset, min(startPix+spacingAmt, xLeftOffset+plotWidth), \
+    #                     yBottom, edgeColor=theBackColor, fillColor=theBackColor)
 
-            drawRegionDistance = self.ChrLengthDistList[self.ChrList[self.selectedChr][1]]
-            self.ChrLengthDistList = [drawRegionDistance]
-            if self.plotScale == 'physic':
-                plotXScale = plotWidth / (endMb-startMb)
-            else:
-                plotXScale = plotWidth / drawRegionDistance
+    #         drawRegionDistance = self.ChrLengthDistList[self.ChrList[self.selectedChr][1]]
+    #         self.ChrLengthDistList = [drawRegionDistance]
+    #         if self.plotScale == 'physic':
+    #             plotXScale = plotWidth / (endMb-startMb)
+    #         else:
+    #             plotXScale = plotWidth / drawRegionDistance
 
-        else:   #multiple chromosome view
-            plotXScale = plotWidth / ((len(self.genotype)-1)*self.GraphInterval + drawRegionDistance)
+    #     else:   #multiple chromosome view
+    #         plotXScale = plotWidth / ((len(self.genotype)-1)*self.GraphInterval + drawRegionDistance)
 
-            startPosX = xLeftOffset
-            if fontZoom == 1.5:
-                chrFontZoom = 2
-            else:
-                chrFontZoom = 1
-            chrLabelFont=pid.Font(ttf="verdana",size=24*chrFontZoom,bold=0)
+    #         startPosX = xLeftOffset
+    #         if fontZoom == 1.5:
+    #             chrFontZoom = 2
+    #         else:
+    #             chrFontZoom = 1
+    #         chrLabelFont=pid.Font(ttf="verdana",size=24*chrFontZoom,bold=0)
 
-            for i, _chr in enumerate(self.genotype):
-                if (i % 2 == 0):
-                    theBackColor = self.GRAPH_BACK_DARK_COLOR
-                else:
-                    theBackColor = self.GRAPH_BACK_LIGHT_COLOR
+    #         for i, _chr in enumerate(self.genotype):
+    #             if (i % 2 == 0):
+    #                 theBackColor = self.GRAPH_BACK_DARK_COLOR
+    #             else:
+    #                 theBackColor = self.GRAPH_BACK_LIGHT_COLOR
 
-                #draw the shaded boxes and the sig/sug thick lines
-                canvas.drawRect(startPosX, yTopOffset, startPosX + self.ChrLengthDistList[i]*plotXScale, \
-                                yBottom, edgeColor=pid.gainsboro,fillColor=theBackColor)
+    #             #draw the shaded boxes and the sig/sug thick lines
+    #             canvas.drawRect(startPosX, yTopOffset, startPosX + self.ChrLengthDistList[i]*plotXScale, \
+    #                             yBottom, edgeColor=pid.gainsboro,fillColor=theBackColor)
 
-                chrNameWidth = canvas.stringWidth(_chr.name, font=chrLabelFont)
-                chrStartPix = startPosX + (self.ChrLengthDistList[i]*plotXScale -chrNameWidth)/2
-                chrEndPix = startPosX + (self.ChrLengthDistList[i]*plotXScale +chrNameWidth)/2
+    #             chrNameWidth = canvas.stringWidth(_chr.name, font=chrLabelFont)
+    #             chrStartPix = startPosX + (self.ChrLengthDistList[i]*plotXScale -chrNameWidth)/2
+    #             chrEndPix = startPosX + (self.ChrLengthDistList[i]*plotXScale +chrNameWidth)/2
 
-                canvas.drawString(_chr.name, chrStartPix, yTopOffset + 20 ,font = chrLabelFont,color=pid.black)
-                COORDS = "%d,%d,%d,%d" %(chrStartPix, yTopOffset, chrEndPix,yTopOffset +20)
+    #             canvas.drawString(_chr.name, chrStartPix, yTopOffset + 20 ,font = chrLabelFont,color=pid.black)
+    #             COORDS = "%d,%d,%d,%d" %(chrStartPix, yTopOffset, chrEndPix,yTopOffset +20)
 
-                #add by NL 09-03-2010
-                HREF = "javascript:chrView(%d,%s);" % (i,self.ChrLengthMbList)
-                #HREF = "javascript:changeView(%d,%s);" % (i,self.ChrLengthMbList)
-                Areas = make_map_area(shape='rect',coords=COORDS,href=HREF)
-                gifmap.areas.append(Areas)
-                startPosX +=  (self.ChrLengthDistList[i]+self.GraphInterval)*plotXScale
+    #             #add by NL 09-03-2010
+    #             HREF = "javascript:chrView(%d,%s);" % (i,self.ChrLengthMbList)
+    #             #HREF = "javascript:changeView(%d,%s);" % (i,self.ChrLengthMbList)
+    #             Areas = make_map_area(shape='rect',coords=COORDS,href=HREF)
+    #             gifmap.areas.append(Areas)
+    #             startPosX +=  (self.ChrLengthDistList[i]+self.GraphInterval)*plotXScale
 
-        return plotXScale
+    #     return plotXScale
 
     def drawPermutationHistogram(self):
         #########################################
