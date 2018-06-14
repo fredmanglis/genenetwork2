@@ -28,8 +28,6 @@ import time
 import string
 from math import *
 import sys,os
-import cPickle
-import httplib
 
 from flask import Flask, g
 
