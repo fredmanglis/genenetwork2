@@ -377,7 +377,7 @@ def drawBootStrapResult(data, canvas, nboot, drawAreaHeight, plotXScale, offset=
             if item[0] != item[1]:
                 canvas.drawRect(item[0], yZero, item[1],
                                 yZero - item[2]*bootHeightThresh/maxBootCount,
-                                fillColor=data.get("BOOTSTRAP_BOX_COLOR"))
+                                fillColor=get_colour(data.get("BOOTSTRAP_BOX_COLOR")))
 
     ###draw boot scale
     highestPercent = (maxBootCount*100.0)/nboot
@@ -432,9 +432,9 @@ def drawGraphBackground(data, canvas, gifmap, offset= (80, 120, 80, 50), zoom = 
         i = 0
         for startPix in Plot.frange(xLeftOffset, xLeftOffset+plotWidth, spacingAmt):
             if (i % 2 == 0):
-                theBackColor = data.get("GRAPH_BACK_DARK_COLOR")
+                theBackColor = get_colour(data.get("GRAPH_BACK_DARK_COLOR"))
             else:
-                theBackColor = data.get("GRAPH_BACK_LIGHT_COLOR")
+                theBackColor = get_colour(data.get("GRAPH_BACK_LIGHT_COLOR"))
             i += 1
             canvas.drawRect(startPix, yTopOffset, min(startPix+spacingAmt, xLeftOffset+plotWidth), \
                     yBottom, edgeColor=theBackColor, fillColor=theBackColor)
