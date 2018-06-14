@@ -72,6 +72,19 @@ def make_radio_button(name, value, checked=False):
     rb.checked = checked
     return rb
 
+def make_image(url, alt=None, width=None, height=None, border=None):
+    img = Image(url=url, alternate_text=alt)
+    if width:
+        img.width = width
+
+    if height:
+        img.height = height
+
+    if border:
+        img.border = border
+
+    return img
+
 #########################################
 #      Inteval Mapping Plot Page
 #########################################
@@ -105,7 +118,7 @@ class MarkerRegression(object):
     DRAW_DETAIL_MB = 4
     DRAW_UTR_LABELS_MB = 4
 
-    qmarkImg = HT.Image('/images/qmarkBoxBlue.gif', width=10, height=13, border=0, alt='Glossary')
+    qmarkImg = make_image(url='/images/qmarkBoxBlue.gif', alt='Glossary', width=10, height=13, border=0)
     # Note that "qmark.gif" is a similar, smaller, rounded-edges question mark. It doesn't look
     # like the ones on the image, though, which is why we don't use it here.
 
