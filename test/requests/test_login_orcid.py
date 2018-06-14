@@ -33,7 +33,7 @@ class TestLoginOrcid(ParametrizedTest):
     def testLoginUrl(self):
         login_button_text = '<input class="btn btn-primary" name="submit" type="submit" value="Sign in with ORCID">'
         result = requests.get(self.gn2_url+"/n/login")
-        index = result.content.find(login_button_text)
+        index = result.content.decode("utf-8").find(login_button_text)
         self.assertTrue(index >= 0, "Should have found `Login with ORCID` button")
 
     # It is no longer possible to test this directly with the reorganisation.

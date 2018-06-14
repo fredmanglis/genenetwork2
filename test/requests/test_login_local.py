@@ -60,5 +60,5 @@ class TestLoginLocal(ParametrizedTest):
     ])
     def testLogin(self, data, expected, message):
         result = requests.post(self.login_url, data=data)
-        index = result.content.find(expected)
+        index = result.content.decode("utf-8").find(expected)
         self.assertTrue(index >= 0, message)

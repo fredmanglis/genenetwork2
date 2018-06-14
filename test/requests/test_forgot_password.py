@@ -35,7 +35,7 @@ class TestForgotPassword(ParametrizedTest):
         result = requests.post(self.forgot_password_url, data=data)
         self.assertEqual(result.url, self.gn2_url+"/n/forgot_password")
         self.assertTrue(
-            result.content.find(error_notification) >= 0
+            result.content.decode("utf-8").find(error_notification) >= 0
             , "Error message should be displayed but was not")
 
     def testWithNonExistingEmail(self):
