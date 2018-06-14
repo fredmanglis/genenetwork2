@@ -35,7 +35,7 @@ def actual_hmac_creation(stringy):
 
     secret = app.config['SECRET_HMAC_CODE']
 
-    hmaced = hmac.new(secret, stringy, hashlib.sha1)
+    hmaced = hmac.new(secret, stringy.encode("utf-8"), hashlib.sha1)
     hm = hmaced.hexdigest()
     # "Conventional wisdom is that you don't lose much in terms of security if you throw away up to half of the output."
     # http://www.w3.org/QA/2009/07/hmac_truncation_in_xml_signatu.html
