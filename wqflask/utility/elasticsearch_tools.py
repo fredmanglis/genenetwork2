@@ -114,7 +114,7 @@ def get_items_by_column(es, column_name, column_value, index, doc_type):
                 "query": { "match": { column_name: column_value } }
             })
         if len(response["hits"]["hits"]) > 0:
-            items = map(lambda x: x["_source"], response["hits"]["hits"])
+            items = list(map(lambda x: x["_source"], response["hits"]["hits"]))
     except TransportError as te:
         pass
     return items
@@ -125,7 +125,7 @@ def es_get_all_items(es, index, doc_type):
         response = es.search(
             index = index, doc_type = doc_type)
         if len(response["hits"]["hits"]) > 0:
-            items = map(lambda x: x["_source"], response["hits"]["hits"])
+            items = list(map(lambda x: x["_source"], response["hits"]["hits"]))
     except TransportError as te:
         pass
     return items
