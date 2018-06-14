@@ -17,7 +17,8 @@ def get_timestamp_string():
 
 def process_traits(unprocessed_traits):
     #print("unprocessed_traits are:", unprocessed_traits)
-    if isinstance(unprocessed_traits, basestring):
+    # if isinstance(unprocessed_traits, basestring): # python2
+    if isinstance(unprocessed_traits, (str,bytes)): # python3
         unprocessed_traits = unprocessed_traits.split(",")
 
     traits = set()
