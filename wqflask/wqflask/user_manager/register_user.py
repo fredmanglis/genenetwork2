@@ -64,7 +64,7 @@ class Password(object):
         # On our computer it takes around 1.4 seconds in 2013
         start_time = time.time()
         salt = base64.b64decode(salt)
-        self.password = pbkdf2.pbkdf2_hex(str(unencrypted_password),
+        self.password = pbkdf2.pbkdf2_hex(str(unencrypted_password).encode("utf-8"),
                                           salt, iterations, keylength, hashfunc)
         self.encrypt_time = round(time.time() - start_time, 3)
         logger.debug("Creating password took:", self.encrypt_time)

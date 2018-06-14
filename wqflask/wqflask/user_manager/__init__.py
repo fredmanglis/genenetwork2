@@ -307,7 +307,7 @@ class LoginUser(object):
                 pwfields.keylength,
                 pwfields.hashfunc)
             logger.debug("\n\nComparing:\n{}\n{}\n".format(encrypted.password, pwfields.password))
-            valid = pbkdf2.safe_str_cmp(encrypted.password, pwfields.password)
+            valid = pbkdf2.safe_str_cmp(encrypted.password.decode("utf-8"), pwfields.password)
             logger.debug("valid is:", valid)
 
         if valid and not user.confirmed:
