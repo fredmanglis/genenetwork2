@@ -27,7 +27,6 @@
 import time
 import string
 from math import *
-import piddle as pid
 import sys,os
 import cPickle
 import httplib
@@ -124,43 +123,43 @@ class MarkerRegression(object):
 
     LODFACTOR = 4.61
 
-    SNP_COLOR           = pid.orange # Color for the SNP "seismograph"
-    TRANSCRIPT_LOCATION_COLOR = pid.mediumpurple
+    SNP_COLOR           = "orange" # pid.orange # Color for the SNP "seismograph"
+    TRANSCRIPT_LOCATION_COLOR = "mediumpurple" # pid.mediumpurple
 
-    BOOTSTRAP_BOX_COLOR = pid.yellow
-    LRS_COLOR           = pid.HexColor(0x0000FF)
-    SIGNIFICANT_COLOR   = pid.HexColor(0xEBC7C7)
-    SUGGESTIVE_COLOR    = pid.gainsboro
+    BOOTSTRAP_BOX_COLOR = "yellow" # pid.yellow
+    LRS_COLOR           = "0x0000FF" # pid.HexColor(0x0000FF)
+    SIGNIFICANT_COLOR   = "0xEBC7C7" # pid.HexColor(0xEBC7C7)
+    SUGGESTIVE_COLOR    = "gainsboro" # pid.gainsboro
     SIGNIFICANT_WIDTH = 5
     SUGGESTIVE_WIDTH = 5
-    ADDITIVE_COLOR_POSITIVE = pid.green
-    ADDITIVE_COLOR_NEGATIVE = pid.orange
-    DOMINANCE_COLOR_POSITIVE = pid.darkviolet
-    DOMINANCE_COLOR_NEGATIVE = pid.red
+    ADDITIVE_COLOR_POSITIVE = "green" # pid.green
+    ADDITIVE_COLOR_NEGATIVE = "orange" # pid.orange
+    DOMINANCE_COLOR_POSITIVE = "darkviolet" # pid.darkviolet
+    DOMINANCE_COLOR_NEGATIVE = "red" # pid.red
 
     ## BEGIN HaplotypeAnalyst
-    HAPLOTYPE_POSITIVE = pid.green
-    HAPLOTYPE_NEGATIVE = pid.red
-    HAPLOTYPE_HETEROZYGOUS = pid.blue
-    HAPLOTYPE_RECOMBINATION = pid.darkgray
+    HAPLOTYPE_POSITIVE = "green" # pid.green
+    HAPLOTYPE_NEGATIVE = "red" # pid.red
+    HAPLOTYPE_HETEROZYGOUS = "blue" # pid.blue
+    HAPLOTYPE_RECOMBINATION = "darkgray" # pid.darkgray
     ## END HaplotypeAnalyst
 
-    TOP_RIGHT_INFO_COLOR = pid.black
+    TOP_RIGHT_INFO_COLOR = "black" # pid.black
 
-    CLICKABLE_WEBQTL_REGION_COLOR     = pid.HexColor(0xF5D3D3)
-    CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR = pid.HexColor(0xFCE9E9)
-    CLICKABLE_WEBQTL_TEXT_COLOR       = pid.HexColor(0x912828)
+    CLICKABLE_WEBQTL_REGION_COLOR     = "0xF5D3D3" # pid.HexColor(0xF5D3D3)
+    CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR = "0xFCE9E9" # pid.HexColor(0xFCE9E9)
+    CLICKABLE_WEBQTL_TEXT_COLOR       = "0x912828" # pid.HexColor(0x912828)
 
-    CLICKABLE_UCSC_REGION_COLOR     = pid.HexColor(0xDDDDEE)
-    CLICKABLE_UCSC_REGION_OUTLINE_COLOR = pid.HexColor(0xEDEDFF)
-    CLICKABLE_UCSC_TEXT_COLOR       = pid.HexColor(0x333366)
+    CLICKABLE_UCSC_REGION_COLOR     = "0xDDDDEE" # pid.HexColor(0xDDDDEE)
+    CLICKABLE_UCSC_REGION_OUTLINE_COLOR = "0xEDEDFF" # pid.HexColor(0xEDEDFF)
+    CLICKABLE_UCSC_TEXT_COLOR       = "0x333366" # pid.HexColor(0x333366)
 
-    CLICKABLE_ENSEMBL_REGION_COLOR  = pid.HexColor(0xEEEEDD)
-    CLICKABLE_ENSEMBL_REGION_OUTLINE_COLOR = pid.HexColor(0xFEFEEE)
-    CLICKABLE_ENSEMBL_TEXT_COLOR    = pid.HexColor(0x555500)
+    CLICKABLE_ENSEMBL_REGION_COLOR  = "0xEEEEDD" # pid.HexColor(0xEEEEDD)
+    CLICKABLE_ENSEMBL_REGION_OUTLINE_COLOR = "0xFEFEEE" # pid.HexColor(0xFEFEEE)
+    CLICKABLE_ENSEMBL_TEXT_COLOR    = "0x555500" # pid.HexColor(0x555500)
 
-    GRAPH_BACK_LIGHT_COLOR = pid.HexColor(0xFBFBFF)
-    GRAPH_BACK_DARK_COLOR  = pid.HexColor(0xF1F1F9)
+    GRAPH_BACK_LIGHT_COLOR = "0xFBFBFF" # pid.HexColor(0xFBFBFF)
+    GRAPH_BACK_DARK_COLOR  = "0xF1F1F9" # pid.HexColor(0xF1F1F9)
 
     HELP_PAGE_REF = '/glossary.html'
 
