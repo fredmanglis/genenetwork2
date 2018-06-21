@@ -5,7 +5,10 @@ def gen_reaper_results(this_trait, dataset, samples_before, trait_vals, json_dat
     genotype = dataset.group.read_genotype_file()
 
     if manhattan_plot != True:
-        genotype = genotype.addinterval()
+        # genotype = genotype.addinterval()
+        # genotype.addinterval() no longer returns an object, instead, it simply
+        #  updates the object in place.
+        genotype.addinterval()
 
     trimmed_samples = []
     trimmed_values = []
