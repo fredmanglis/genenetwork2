@@ -17,7 +17,6 @@ import numpy as np
 
 from pprint import pformat as pf
 
-import reaper
 
 from base.trait import GeneralTrait
 from base import data_set
