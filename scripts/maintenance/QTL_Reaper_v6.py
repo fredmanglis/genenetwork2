@@ -6,6 +6,7 @@ import os
 import reaper
 import MySQLdb
 import time
+from utility import reaper_util
 
 con = MySQLdb.Connect(db='db_webqtl',user='username',passwd='', host="localhost")
 cursor = con.cursor()
@@ -85,7 +86,8 @@ for ProbeSetFreezeId in ProbeSetFreezeIds:
 		
 		if len(_strains) < 8:
 			continue
-		qtlresults = genotype_1.regression(strains = _strains, trait = _values)
+		qtlresults = reaper_util.regression(genotype_1, strains = _strains,
+                                                    trait = _values)
 		_max = max(qtlresults)
 		_locus = _max.locus.name
 		_additive = _max.additive

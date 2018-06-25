@@ -1,3 +1,4 @@
+from utility import reaper_util
 import utility.logger
 logger = utility.logger.getLogger(__name__ )
 
@@ -26,7 +27,7 @@ def gen_reaper_results(this_trait, dataset, samples_before, trait_vals, json_dat
         suggestive = 0
         significant = 0
     else:
-        perm_output = genotype.permutation(strains = trimmed_samples, trait = trimmed_values, nperm=num_perm)
+        perm_output = reaper_util.permutation(genotype, strains = trimmed_samples, trait = trimmed_values, nperm=num_perm)
         suggestive = perm_output[int(num_perm*0.37-1)]
         significant = perm_output[int(num_perm*0.95-1)]
         #highly_significant = perm_output[int(num_perm*0.99-1)] #ZS: Currently not used, but leaving it here just in case
@@ -35,9 +36,10 @@ def gen_reaper_results(this_trait, dataset, samples_before, trait_vals, json_dat
     json_data['significant'] = significant
 
     if control_marker != "" and do_control == "true":
-        reaper_results = genotype.regression(strains = trimmed_samples,
-                                             trait = trimmed_values,
-                                             control = str(control_marker))
+        reaper_results = reaper_util.regression(genotype,
+                                                strains = trimmed_samples,
+                                                trait = trimmed_values,
+                                                control = str(control_marker))
         if bootCheck:
             control_geno = []
             control_geno2 = []
@@ -56,18 +58,21 @@ def gen_reaper_results(this_trait, dataset, samples_before, trait_vals, json_dat
                     _idx = _prgy.index(_strain)
                     control_geno.append(control_geno2[_idx])
 
-            bootstrap_results = genotype.bootstrap(strains = trimmed_samples,
-                                                        trait = trimmed_values,
-                                                        control = control_geno,
-                                                        nboot = num_bootstrap)
+            bootstrap_results = reaper_util.bootstrap(genotype,
+                                                      strains = trimmed_samples,
+                                                      trait = trimmed_values,
+                                                      control = control_geno,
+                                                      nboot = num_bootstrap)
     else:
-        reaper_results = genotype.regression(strains = trimmed_samples,
-                                             trait = trimmed_values)
+        reaper_results = reaper_util.regression(genotype,
+                                                strains = trimmed_samples,
+                                                trait = trimmed_values)
 
         if bootCheck:
-            bootstrap_results = genotype.bootstrap(strains = trimmed_samples,
-                                                        trait = trimmed_values,
-                                                        nboot = num_bootstrap)
+            bootstrap_results = reaper_util.bootstrap(genotype,
+                                                      strains = trimmed_samples,
+                                                      trait = trimmed_values,
+                                                      nboot = num_bootstrap)
 
     json_data['chr'] = []
     json_data['pos'] = []

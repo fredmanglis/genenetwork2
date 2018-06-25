@@ -1,7 +1,7 @@
 
 
 import sys
-# sys.path.append(".") Never in a running webserver
+# sys.spath.append(".") Never in a running webserver
 
 import string
 import pickle
@@ -14,6 +14,8 @@ import resource
 
 import scipy
 import numpy as np
+
+from utility import reaper_util
 
 from pprint import pformat as pf
 
@@ -129,8 +131,9 @@ class Heatmap(object):
                     trimmed_samples.append(samples[i])
                     trimmed_values.append(values[i])
 
-            reaper_results = genotype.regression(strains = trimmed_samples,
-                                                 trait = trimmed_values)
+            reaper_results = reaper_util.regression(genotype,
+                                                    strains = trimmed_samples,
+                                                    trait = trimmed_values)
 
             lrs_values = [float(qtl.lrs) for qtl in reaper_results]
 
