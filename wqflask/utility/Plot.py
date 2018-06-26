@@ -121,11 +121,9 @@ def find_outliers(vals):
 # parameter: data is either object returned by reaper permutation function (called by MarkerRegressionPage.py)
 # or the first object returned by direct (pair-scan) permu function (called by DirectPlotPage.py)
 def plotBar(data, filename, barColor="blue", axesColor="black", labelColor="black", XLabel=None, YLabel=None, title=None, offset= (60, 20, 40, 40), zoom = 1):
-    import subprocess
+    from utility.external import run_with_python2
 
     cmd_list = [
-        "env", "PYTHONPATH={}".format(utility.tools.PYTHON2_PROFILE),
-        os.environ["PYTHON2_PROFILE/bin/python"], "-m",
         "wqflask.utility.piddle_drawer", "plotbar", filename,
         "--data='{}'".format(json.dumps(data)),
         "--barcolor={}".format(barColor), "--axescolor={}".format(axesColor),
@@ -142,10 +140,7 @@ def plotBar(data, filename, barColor="blue", axesColor="black", labelColor="blac
     if YLabel:
         cmd_list.append("--ylabel={}".format(YLabel))
 
-    results = subprocess.run(cmd_list, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-    err = results.stderr.decode("utf-8")
-    if err:
-        raise RuntimeError("Piddle drawer failed with {}".format(err))
+    results = run_with_python2(cmd_list)
 
 # This function determines the scale of the plot
 def detScaleOld(min,max):
