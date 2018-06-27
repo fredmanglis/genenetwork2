@@ -23,23 +23,26 @@ def init_chromosome(data):
 
     return chromosomes
 
+def init_prgy(data):
+    return map(str, data)
+
 def init_genotype(args):
     data = None
     with open(args.filename, "r") as infile:
         data = infile.read()
 
-    genotype = reaper.Dataset()
     data = json.loads(data)
-    genotype.name = str(data["name"])
+    genotype = reaper.Dataset()
+    # genotype.name = str(data["name"])
     # genotype.mat = str(data["mat"])
+    # genotype.pat = str(data["pat"])
     # genotype.type = str(data["type"])
     genotype.chromosome = init_chromosome(data["chromosome"])
-    # genotype.prgy = init_prgy(data["prgy"])
+    genotype.prgy = init_prgy(data["prgy"])
     # genotype.nprgy = len(data["prgy"])
     # genotype.dominance = data["dominance"]
     # genotype.Mb=data["Mb"]
     # genotype.interval = data["interval"]
-    print(genotype)
     return genotype
 
 def process_strains(args):
