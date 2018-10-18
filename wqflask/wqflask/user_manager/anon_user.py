@@ -13,43 +13,68 @@ logger = getLogger(__name__)
 
 class AnonUser(object):
     """Anonymous user handling"""
-    cookie_name = 'anon_user_v8'
+    cookie_name = 'anon_user_v1'
 
     def __init__(self):
         self.cookie = request.cookies.get(self.cookie_name)
         if self.cookie:
-            logger.debug("already is cookie")
+            logger.debug("ANON COOKIE ALREADY EXISTS")
             self.anon_id = verify_cookie(self.cookie)
 
         else:
-            logger.debug("creating new cookie")
+            logger.debug("CREATING NEW ANON COOKIE")
             self.anon_id, self.cookie = create_signed_cookie()
+
         self.key = "anon_collection:v1:{}".format(self.anon_id)
 
-        @after.after_this_request
-        def set_cookie(response):
-            response.set_cookie(self.cookie_name, self.cookie)
+    def add_collection(self, new_collection):
+        collection_dict = dict(name = new_collection.name,
+                               created_timestamp = datetime.datetime.utcnow().strftime('%b %d %Y %I:%M%p'),
+                               changed_timestamp = datetime.datetime.utcnow().strftime('%b %d %Y %I:%M%p'),
+                               num_members = new_collection.num_members,
+                               members = new_collection.get_members())
+
+        Redis.set(self.key, json.dumps(collection_dict))
+        Redis.expire(self.key, 60 * 60 * 24 * 5)
 
     def delete_collection(self, collection_name):
-        from wqflask.collect import delete_collection_by_id
         existing_collections = self.get_collections()
-        to_delete = [coll for coll in existing_collections if coll["name"] == collection_name]
-        for collection in to_delete:
-            delete_collection_by_id(collection_id = collection["id"])
+        updated_collections = []
+        for i, collection in enumerate(existing_collections):
+            if collection['name'] == collection_name:
+                continue
+            else:
+                this_collection = {}
+                this_collection['id'] = collection['id']
+                this_collection['name'] = collection['name']
+                this_collection['created_timestamp'] = collection['created_timestamp'].strftime('%b %d %Y %I:%M%p')
+                this_collection['changed_timestamp'] = collection['changed_timestamp'].strftime('%b %d %Y %I:%M%p')
+                this_collection['num_members'] = collection['num_members']
+                this_collection['members'] = collection['members']
+                updated_collections.append(this_collection)
+
+        Redis.set(self.key, json.dumps(updated_collections))
 
     def get_collections(self):
-        from wqflask.collect import get_collections_by_user_key
-        return get_collections_by_user_key(self.key)
+        json_collections = Redis.get(self.key)
+        if json_collections == None or json_collections == "None":
+            return []
+        else:
+            collections = json.loads(json_collections)
+            for collection in collections:
+                collection['created_timestamp'] = datetime.datetime.strptime(collection['created_timestamp'], '%b %d %Y %I:%M%p')
+                collection['changed_timestamp'] = datetime.datetime.strptime(collection['changed_timestamp'], '%b %d %Y %I:%M%p')
+            return collections
 
     def import_traits_to_user(self):
-        from utility.elasticsearch_tools import (get_elasticsearch_connection,
-                                                 es_update_data)
-        result = self.get_collections()
-        for collection in result:
-            collection["user_key"] = session["user"]["user_id"]
-            es_update_data(es = get_elasticsearch_connection(),
-                           index = "collections", doc_type = "all",
-                           data_item = collection, data_id = collection["id"])
+        result = Redis.get(self.key)
+        collections_list = json.loads(result if result else "[]")
+        for collection in collections_list:
+            collection_exists = g.user_session.get_collection_by_name(collection['name'])
+            if collection_exists:
+                continue
+            else:
+                g.user_session.add_collection(collection['name'], collection['members'])
 
     def display_num_collections(self):
         """

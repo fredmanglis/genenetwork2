@@ -53,7 +53,7 @@ def test_elasticsearch_connection():
     if not es.ping():
         logger.warning("Elasticsearch is DOWN")
 
-def get_elasticsearch_connection():
+def get_elasticsearch_connection(for_user=True):
     """Return a connection to ES. Returns None on failure"""
     logger.info("get_elasticsearch_connection")
     es = None
@@ -61,9 +61,12 @@ def get_elasticsearch_connection():
         assert(ELASTICSEARCH_HOSTS)
         logger.info("ES HOSTS",ELASTICSEARCH_HOSTS)
 
-        es = Elasticsearch(ELASTICSEARCH_HOSTS) if (ELASTICSEARCH_HOSTS) else None
+        es = Elasticsearch(
+            ELASTICSEARCH_HOSTS, , timeout=30, retry_on_timeout=True) if (
+                ELASTICSEARCH_HOSTS) else None
 
-        setup_users_index(es)
+        if for_user:
+            setup_users_index(es)
 
         es_logger = logging.getLogger("elasticsearch")
         es_logger.setLevel(logging.INFO)

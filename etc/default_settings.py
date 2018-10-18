@@ -25,9 +25,17 @@ import os
 import sys
 
 GN_VERSION = open("../etc/VERSION","r").read()
+GN_SERVER_URL = "http://localhost:8880/" # REST API server
+
+# ---- MySQL
+
 SQL_URI = "mysql://gn2:mysql_password@localhost/db_webqtl_s"
 SQL_ALCHEMY_POOL_RECYCLE = 3600
-GN_SERVER_URL = "http://localhost:8880/" # REST API server
+
+# ---- Elastic search
+
+ELASTICSEARCH_HOST = "localhost"
+ELASTICSEARCH_PORT = 9200
 
 # ---- Flask configuration (see website)
 TRAP_BAD_REQUEST_ERRORS = True
@@ -79,7 +87,7 @@ USE_GN_SERVER   = 'False'   # Use GN_SERVER SQL calls
 HOME            = os.environ['HOME']
 
 # ---- Default locations
-GENENETWORK_FILES   = HOME+"/gn2_data"  # base dir for all static data files
+GENENETWORK_FILES   = HOME+"/genotype_files"  # base dir for all static data files
 
 # ---- Path overrides for Genenetwork - the defaults are normally
 #      picked up from Guix or in the HOME directory

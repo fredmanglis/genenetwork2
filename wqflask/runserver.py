@@ -9,6 +9,7 @@
 
 from .wqflask import app
 
+
 import logging
 from . import utility.logger
 logger = utility.logger.getLogger(__name__ )
@@ -27,6 +28,9 @@ app_config()
 
 
 werkzeug_logger = logging.getLogger('werkzeug')
+
+from utility.tools import WEBSERVER_MODE, SERVER_PORT
+port = int(SERVER_PORT)
 
 if WEBSERVER_MODE == 'DEBUG':
     app.run(host='0.0.0.0',

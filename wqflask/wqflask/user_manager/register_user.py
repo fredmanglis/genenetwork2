@@ -55,19 +55,9 @@ class RegisterUser(object):
         set_password(password, self.user)
         self.user.user_id = str(uuid.uuid4())
         self.user.confirmed = 1
-        save_user(es, self.user.__dict__, self.user.user_id)
 
-class Password(object):
-    def __init__(self, unencrypted_password, salt, iterations, keylength, hashfunc):
-        hashfunc = getattr(hashlib, hashfunc)
-        logger.debug("hashfunc is:", hashfunc)
-        # On our computer it takes around 1.4 seconds in 2013
-        start_time = time.time()
-        salt = base64.b64decode(salt)
-        self.password = pbkdf2.pbkdf2_hex(str(unencrypted_password).encode("utf-8"),
-                                          salt, iterations, keylength, hashfunc)
-        self.encrypt_time = round(time.time() - start_time, 3)
-        logger.debug("Creating password took:", self.encrypt_time)
+        self.user.registration_info = json.dumps(basic_info(), sort_keys=True)
+        save_user(es, self.user.__dict__, self.user.user_id)
 
 def set_password(password, user):
     pwfields = Bunch()

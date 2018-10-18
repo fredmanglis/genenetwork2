@@ -40,6 +40,7 @@ from base.GeneralObject import GeneralObject
 from utility import webqtlUtil
 from utility import helper_functions
 from utility import Plot
+from utility.benchmark import Bench
 from wqflask.interval_analyst import GeneUtil
 from base.webqtlConfig import TMPDIR, GENERATED_TEXT_DIR, GENERATED_IMAGE_DIR
 
@@ -105,12 +106,8 @@ class MarkerRegression(object):
     # ** GENES **********
     BAND_SPACING = 4
 
-    #ENSEMBL_BAND_Y      = UCSC_BAND_Y + UCSC_BAND_HEIGHT + BAND_SPACING
-    UCSC_BAND_HEIGHT = 10
-    ENSEMBL_BAND_HEIGHT = 10
-    WEBQTL_BAND_HEIGHT = 10
+    BAND_HEIGHT = 10
 
-    #GENE_START_Y        = ENSEMBL_BAND_Y + ENSEMBL_BAND_HEIGHT + BAND_SPACING
     NUM_GENE_ROWS       = 10
     EACH_GENE_HEIGHT    = 6  # number of pixels tall, for each gene to display
     EACH_GENE_ARROW_WIDTH = 5
@@ -160,6 +157,10 @@ class MarkerRegression(object):
     CLICKABLE_WEBQTL_REGION_COLOR     = "0xF5D3D3" # pid.HexColor(0xF5D3D3)
     CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR = "0xFCE9E9" # pid.HexColor(0xFCE9E9)
     CLICKABLE_WEBQTL_TEXT_COLOR       = "0x912828" # pid.HexColor(0x912828)
+
+    CLICKABLE_PHENOGEN_REGION_COLOR   = "0xA2FB94" # pid.HexColor(0xA2FB94)
+    CLICKABLE_PHENOGEN_REGION_OUTLINE_COLOR = "0xCEFEC7" # pid.HexColor(0xCEFEC7)
+    CLICKABLE_PHENOGEN_TEXT_COLOR     = "0x1FD504" # pid.HexColor(0x1FD504)
 
     CLICKABLE_UCSC_REGION_COLOR     = "0xDDDDEE" # pid.HexColor(0xDDDDEE)
     CLICKABLE_UCSC_REGION_OUTLINE_COLOR = "0xEDEDFF" # pid.HexColor(0xEDEDFF)
@@ -465,7 +466,8 @@ class MarkerRegression(object):
         ################################################################
         showLocusForm = ""
         intCanvas = pid.PILCanvas(size=(self.graphWidth, self.graphHeight))
-        gifmap = self.plotIntMapping(intCanvas, startMb = self.startMb, endMb = self.endMb, showLocusForm= showLocusForm)
+        with Bench("Drawing Plot"):
+            gifmap = self.plotIntMapping(intCanvas, startMb = self.startMb, endMb = self.endMb, showLocusForm= showLocusForm)
 
         self.gifmap = gifmap.__str__()
 
@@ -509,209 +511,6 @@ class MarkerRegression(object):
 
         if self.traitList and self.traitList[0].dataset and self.traitList[0].dataset.type == 'Geno':
             btminfo.append(HT.BR(), 'Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
-
-    # def plotIntMapping(self, canvas, offset= (80, 120, 20, 100), zoom = 1, startMb = None, endMb = None, showLocusForm = ""):
-#         #calculating margins
-#         xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
-#         if self.multipleInterval:
-#             yTopOffset = max(80, yTopOffset)
-#         else:
-#             if self.legendChecked:
-#                 yTopOffset = max(80, yTopOffset)
-#             else:
-#                 pass
-
-#         if self.plotScale != 'physic':
-#             yBottomOffset = max(120, yBottomOffset)
-#         fontZoom = zoom
-#         if zoom == 2:
-#             xLeftOffset += 20
-#             fontZoom = 1.5
-
-#         xLeftOffset = int(xLeftOffset*fontZoom)
-#         xRightOffset = int(xRightOffset*fontZoom)
-#         yBottomOffset = int(yBottomOffset*fontZoom)
-
-#         cWidth = canvas.size[0]
-#         cHeight = canvas.size[1]
-#         plotWidth = cWidth - xLeftOffset - xRightOffset
-#         plotHeight = cHeight - yTopOffset - yBottomOffset
-
-#         #Drawing Area Height
-#         drawAreaHeight = plotHeight
-#         if self.plotScale == 'physic' and self.selectedChr > -1:
-#             drawAreaHeight -= self.ENSEMBL_BAND_HEIGHT + self.UCSC_BAND_HEIGHT+ self.WEBQTL_BAND_HEIGHT + 3*self.BAND_SPACING+ 10*zoom
-#             if self.geneChecked:
-#                 drawAreaHeight -= self.NUM_GENE_ROWS*self.EACH_GENE_HEIGHT + 3*self.BAND_SPACING + 10*zoom
-#         else:
-#             if self.selectedChr > -1:
-#                 drawAreaHeight -= 20
-#             else:
-#                 drawAreaHeight -= 30
-
-# ## BEGIN HaplotypeAnalyst
-#         if self.haplotypeAnalystChecked and self.selectedChr > -1:
-#             drawAreaHeight -= self.EACH_GENE_HEIGHT * (self.NR_INDIVIDUALS+10) * 2 * zoom
-# ## END HaplotypeAnalyst
-
-#         if zoom == 2:
-#             drawAreaHeight -= 60
-
-#         #Image map
-#         gifmap = HT.Map(name = "WebQTLImageMap")
-
-#         newoffset = (xLeftOffset, xRightOffset, yTopOffset, yBottomOffset)
-#         # Draw the alternating-color background first and get plotXScale
-#         plotXScale = self.drawGraphBackground(canvas, gifmap, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
-
-#         #draw bootstap
-#         if self.bootChecked and not self.multipleInterval and not self.manhattan_plot:
-#             self.drawBootStrapResult(canvas, self.nboot, drawAreaHeight, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
-
-#         # Draw clickable region and gene band if selected
-#         if self.plotScale == 'physic' and self.selectedChr > -1:
-#             self.drawClickBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-#             if self.geneChecked and self.geneCol:
-#                 self.drawGeneBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-#             if self.SNPChecked:
-#                 self.drawSNPTrackNew(canvas, offset=newoffset, zoom = 2*zoom, startMb=startMb, endMb = endMb)
-# ## BEGIN HaplotypeAnalyst
-#             if self.haplotypeAnalystChecked:
-#                 self.drawHaplotypeBand(canvas, gifmap, plotXScale, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-# ## END HaplotypeAnalyst
-#         # Draw X axis
-#         self.drawXAxis(canvas, drawAreaHeight, gifmap, plotXScale, showLocusForm, offset=newoffset, zoom = zoom, startMb=startMb, endMb = endMb)
-#         # Draw QTL curve
-#         self.drawQTL(canvas, drawAreaHeight, gifmap, plotXScale, offset=newoffset, zoom= zoom, startMb=startMb, endMb = endMb)
-
-#         #draw legend
-#         if self.multipleInterval:
-#             self.drawMultiTraitName(fd, canvas, gifmap, showLocusForm, offset=newoffset)
-#         elif self.legendChecked:
-#             self.drawLegendPanel(canvas, offset=newoffset, zoom = zoom)
-#         else:
-#             pass
-
-#         #draw position, no need to use a separate function
-#         self.drawProbeSetPosition(canvas, plotXScale, offset=newoffset, zoom = zoom)
-
-#         return gifmap
-
-    # def drawBootStrapResult(self, canvas, nboot, drawAreaHeight, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
-    #     xLeftOffset, xRightOffset, yTopOffset, yBottomOffset = offset
-    #     plotWidth = canvas.size[0] - xLeftOffset - xRightOffset
-    #     plotHeight = canvas.size[1] - yTopOffset - yBottomOffset
-    #     yZero = canvas.size[1] - yBottomOffset
-    #     fontZoom = zoom
-    #     if zoom == 2:
-    #         fontZoom = 1.5
-
-    #     bootHeightThresh = drawAreaHeight*3/4
-
-    #     #break bootstrap result into groups
-    #     BootCoord = []
-    #     i = 0
-    #     startX = xLeftOffset
-
-    #     if self.selectedChr == -1: #ZS: If viewing full genome/all chromosomes
-    #         for j, _chr in enumerate(self.genotype):
-    #             BootCoord.append( [])
-    #             for _locus in _chr:
-    #                 if self.plotScale == 'physic':
-    #                     Xc = startX + (_locus.Mb-self.startMb)*plotXScale
-    #                 else:
-    #                     Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
-    #                 BootCoord[-1].append([Xc, self.bootResult[i]])
-    #                 i += 1
-    #             startX += (self.ChrLengthDistList[j] + self.GraphInterval)*plotXScale
-    #     else:
-    #         for j, _chr in enumerate(self.genotype):
-    #             if _chr.name == self.ChrList[self.selectedChr][0]:
-    #                 BootCoord.append( [])
-    #             for _locus in _chr:
-    #                 if _chr.name == self.ChrList[self.selectedChr][0]:
-    #                     if self.plotScale == 'physic':
-    #                         Xc = startX + (_locus.Mb-startMb)*plotXScale
-    #                     else:
-    #                         Xc = startX + (_locus.cM-_chr[0].cM)*plotXScale
-    #                     BootCoord[-1].append([Xc, self.bootResult[i]])
-    #                 i += 1
-
-    #     #reduce bootResult
-    #     if self.selectedChr > -1:
-    #         maxBootBar = 80.0
-    #     else:
-    #         maxBootBar = 200.0
-    #     stepBootStrap = plotWidth/maxBootBar
-    #     reducedBootCoord = []
-    #     maxBootCount = 0
-
-    #     for BootChrCoord in BootCoord:
-    #         nBoot = len(BootChrCoord)
-    #         bootStartPixX = BootChrCoord[0][0]
-    #         bootCount = BootChrCoord[0][1]
-    #         for i in range(1, nBoot):
-    #             if BootChrCoord[i][0] - bootStartPixX < stepBootStrap:
-    #                 bootCount += BootChrCoord[i][1]
-    #                 continue
-    #             else:
-    #                 if maxBootCount < bootCount:
-    #                     maxBootCount = bootCount
-    #                 # end if
-    #                 reducedBootCoord.append([bootStartPixX, BootChrCoord[i][0], bootCount])
-    #                 bootStartPixX = BootChrCoord[i][0]
-    #                 bootCount = BootChrCoord[i][1]
-    #             # end else
-    #         # end for
-    #         #add last piece
-    #         if BootChrCoord[-1][0] - bootStartPixX  > stepBootStrap/2.0:
-    #             reducedBootCoord.append([bootStartPixX, BootChrCoord[-1][0], bootCount])
-    #         else:
-    #             reducedBootCoord[-1][2] += bootCount
-    #             reducedBootCoord[-1][1] = BootChrCoord[-1][0]
-    #         # end else
-    #         if maxBootCount < reducedBootCoord[-1][2]:
-    #             maxBootCount = reducedBootCoord[-1][2]
-    #         # end if
-    #     for item in reducedBootCoord:
-    #         if item[2] > 0:
-    #             if item[0] < xLeftOffset:
-    #                 item[0] = xLeftOffset
-    #             if item[0] > xLeftOffset+plotWidth:
-    #                 item[0] = xLeftOffset+plotWidth
-    #             if item[1] < xLeftOffset:
-    #                 item[1] = xLeftOffset
-    #             if item[1] > xLeftOffset+plotWidth:
-    #                 item[1] = xLeftOffset+plotWidth
-    #             if item[0] != item[1]:
-    #                 canvas.drawRect(item[0], yZero, item[1], yZero - item[2]*bootHeightThresh/maxBootCount,
-    #                 fillColor=self.BOOTSTRAP_BOX_COLOR)
-
-    #     ###draw boot scale
-    #     highestPercent = (maxBootCount*100.0)/nboot
-    #     bootScale = Plot.detScale(0, highestPercent)
-    #     bootScale = Plot.frange(bootScale[0], bootScale[1], bootScale[1]/bootScale[2])
-    #     bootScale = bootScale[:-1] + [highestPercent]
-
-    #     bootOffset = 50*fontZoom
-    #     bootScaleFont=pid.Font(ttf="verdana",size=13*fontZoom,bold=0)
-    #     canvas.drawRect(canvas.size[0]-bootOffset,yZero-bootHeightThresh,canvas.size[0]-bootOffset-15*zoom,yZero,fillColor = pid.yellow)
-    #     canvas.drawLine(canvas.size[0]-bootOffset+4, yZero, canvas.size[0]-bootOffset, yZero, color=pid.black)
-    #     canvas.drawString('0%' ,canvas.size[0]-bootOffset+10,yZero+5,font=bootScaleFont,color=pid.black)
-    #     for item in bootScale:
-    #         if item == 0:
-    #             continue
-    #         bootY = yZero-bootHeightThresh*item/highestPercent
-    #         canvas.drawLine(canvas.size[0]-bootOffset+4,bootY,canvas.size[0]-bootOffset,bootY,color=pid.black)
-    #         canvas.drawString('%2.1f'%item ,canvas.size[0]-bootOffset+10,bootY+5,font=bootScaleFont,color=pid.black)
-
-    #     if self.legendChecked:
-    #         startPosY = 30
-    #         nCol = 2
-    #         smallLabelFont = pid.Font(ttf="trebuc", size=12*fontZoom, bold=1)
-    #         leftOffset = xLeftOffset+(nCol-1)*200
-    #         canvas.drawRect(leftOffset,startPosY-6, leftOffset+12,startPosY+6, fillColor=pid.yellow)
-    #         canvas.drawString('Frequency of the Peak LRS',leftOffset+ 20, startPosY+5,font=smallLabelFont,color=pid.black)
 
     def drawProbeSetPosition(self, canvas, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
         if len(self.traitList) != 1:
@@ -1064,7 +863,10 @@ class MarkerRegression(object):
 
             #Draw Genes
             geneYLocation = yPaddingTop + (gIndex % self.NUM_GENE_ROWS) * self.EACH_GENE_HEIGHT*zoom
-            geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
+            if self.dataset.group.species == "mouse" or self.dataset.group.species == "rat":
+                geneYLocation += 4*self.BAND_HEIGHT + 4*self.BAND_SPACING
+            else:
+                geneYLocation += 3*self.BAND_HEIGHT + 3*self.BAND_SPACING
 
             #draw the detail view
             if self.endMb - self.startMb <= self.DRAW_DETAIL_MB and geneEndPix - geneStartPix > self.EACH_GENE_ARROW_SPACING * 3:
@@ -1105,10 +907,6 @@ class MarkerRegression(object):
 
                 #draw gray blocks for 3' and 5' UTR blocks
                 if cdsStart and cdsEnd:
-                    logger.debug("txStart:", txStart)
-                    logger.debug("cdsStart:", cdsStart)
-                    logger.debug("txEnd:", txEnd)
-                    logger.debug("cdsEnd:", cdsEnd)
                     utrStartPix = (txStart-startMb)*plotXScale + xLeftOffset
                     utrEndPix = (cdsStart-startMb)*plotXScale + xLeftOffset
                     if (utrStartPix < xLeftOffset):
@@ -1262,7 +1060,10 @@ class MarkerRegression(object):
                 #Draw Genes
 
                 geneYLocation = yPaddingTop + self.NUM_GENE_ROWS * (self.EACH_GENE_HEIGHT)*zoom
-                geneYLocation += self.UCSC_BAND_HEIGHT + self.BAND_SPACING + self.ENSEMBL_BAND_HEIGHT + self.BAND_SPACING + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
+                if self.dataset.group.species == "mouse" or self.dataset.group.species == "rat":
+                    geneYLocation += 4*self.BAND_HEIGHT + 4*self.BAND_SPACING
+                else:
+                    geneYLocation += 3*self.BAND_HEIGHT + 3*self.BAND_SPACING
 
                 if self.genotype[0][i].name != " - " :
 
@@ -1380,49 +1181,73 @@ class MarkerRegression(object):
         i = 0
 
         paddingTop = yTopOffset
-        ucscPaddingTop = paddingTop + self.WEBQTL_BAND_HEIGHT + self.BAND_SPACING
-        ensemblPaddingTop = ucscPaddingTop + self.UCSC_BAND_HEIGHT + self.BAND_SPACING
+        if self.dataset.group.species == "mouse" or self.dataset.group.species == "rat":
+            phenogenPaddingTop = paddingTop + (self.BAND_HEIGHT + self.BAND_SPACING)
+            ucscPaddingTop = paddingTop + 2*(self.BAND_HEIGHT + self.BAND_SPACING)
+            ensemblPaddingTop = paddingTop + 3*(self.BAND_HEIGHT + self.BAND_SPACING)
+        else:
+            ucscPaddingTop = paddingTop + (self.BAND_HEIGHT + self.BAND_SPACING)
+            ensemblPaddingTop = paddingTop + 2*(self.BAND_HEIGHT + self.BAND_SPACING)
 
         if zoom == 1:
             for pixel in range(xLeftOffset, xLeftOffset + plotWidth, pixelStep):
 
                 calBase = self.kONE_MILLION*(startMb + (endMb-startMb)*(pixel-xLeftOffset-0.0)/plotWidth)
+                if pixel == (xLeftOffset + pixelStep*2):
+                  logger.debug("CALBASE:", calBase)
+                  logger.debug("FLANKING:", flankingWidthInBases)
 
                 xBrowse1 = pixel
                 xBrowse2 = min(xLeftOffset + plotWidth, (pixel + pixelStep - 1))
 
-                WEBQTL_COORDS = "%d, %d, %d, %d" % (xBrowse1, paddingTop, xBrowse2, (paddingTop+self.WEBQTL_BAND_HEIGHT))
+                WEBQTL_COORDS = "%d, %d, %d, %d" % (xBrowse1, paddingTop, xBrowse2, (paddingTop+self.BAND_HEIGHT))
                 WEBQTL_HREF = "javascript:rangeView('%s', %f, %f)" % (self.selectedChr - 1, max(0, (calBase-webqtlZoomWidth))/1000000.0, (calBase+webqtlZoomWidth)/1000000.0)
 
                 WEBQTL_TITLE = "Click to view this section of the genome in WebQTL"
                 gifmap.areas.append(make_map_area(shape='rect', coords=WEBQTL_COORDS, href=WEBQTL_HREF, title=WEBQTL_TITLE))
-                canvas.drawRect(xBrowse1, paddingTop, xBrowse2, (paddingTop + self.WEBQTL_BAND_HEIGHT), edgeColor=self.CLICKABLE_WEBQTL_REGION_COLOR, fillColor=self.CLICKABLE_WEBQTL_REGION_COLOR)
-                canvas.drawLine(xBrowse1, paddingTop, xBrowse1, (paddingTop + self.WEBQTL_BAND_HEIGHT), color=self.CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR)
+                canvas.drawRect(xBrowse1, paddingTop, xBrowse2, (paddingTop + self.BAND_HEIGHT), edgeColor=self.CLICKABLE_WEBQTL_REGION_COLOR, fillColor=self.CLICKABLE_WEBQTL_REGION_COLOR)
+                canvas.drawLine(xBrowse1, paddingTop, xBrowse1, (paddingTop + self.BAND_HEIGHT), color=self.CLICKABLE_WEBQTL_REGION_OUTLINE_COLOR)
 
-                UCSC_COORDS = "%d, %d, %d, %d" %(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.UCSC_BAND_HEIGHT))
+                if self.dataset.group.species == "mouse" or self.dataset.group.species == "rat":
+                    PHENOGEN_COORDS = "%d, %d, %d, %d" % (xBrowse1, phenogenPaddingTop, xBrowse2, (phenogenPaddingTop+self.BAND_HEIGHT))
+                    if self.dataset.group.species == "mouse":
+                        PHENOGEN_HREF = "https://phenogen.ucdenver.edu/PhenoGen/gene.jsp?speciesCB=Mm&auto=Y&geneTxt=chr%s:%d-%d&genomeVer=mm10" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
+                    else:
+                        PHENOGEN_HREF = "https://phenogen.ucdenver.edu/PhenoGen/gene.jsp?speciesCB=Mm&auto=Y&geneTxt=chr%s:%d-%d&genomeVer=mm10" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
+                    PHENOGEN_TITLE = "Click to view this section of the genome in PhenoGen"
+                    gifmap.areas.append(HT.Area(shape='rect',coords=PHENOGEN_COORDS,href=PHENOGEN_HREF, title=PHENOGEN_TITLE))
+                    canvas.drawRect(xBrowse1, phenogenPaddingTop, xBrowse2, (phenogenPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_PHENOGEN_REGION_COLOR, fillColor=self.CLICKABLE_PHENOGEN_REGION_COLOR)
+                    canvas.drawLine(xBrowse1, phenogenPaddingTop, xBrowse1, (phenogenPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_PHENOGEN_REGION_OUTLINE_COLOR)
+
+                UCSC_COORDS = "%d, %d, %d, %d" %(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.BAND_HEIGHT))
                 if self.dataset.group.species == "mouse":
                     UCSC_HREF = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&position=chr%s:%d-%d&hgt.customText=%s/snp/chr%s" % (self._ucscDb, self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases, webqtlConfig.PORTADDR, self.selectedChr)
                 else:
                     UCSC_HREF = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&position=chr%s:%d-%d" % (self._ucscDb, self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                 UCSC_TITLE = "Click to view this section of the genome in the UCSC Genome Browser"
                 gifmap.areas.append(make_map_area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
-                canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.UCSC_BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
-                canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.UCSC_BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
+                canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
+                canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
+                gifmap.areas.append(HT.Area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
+                canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
+                canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
 
-                ENSEMBL_COORDS = "%d, %d, %d, %d" %(xBrowse1, ensemblPaddingTop, xBrowse2, (ensemblPaddingTop+self.ENSEMBL_BAND_HEIGHT))
+                ENSEMBL_COORDS = "%d, %d, %d, %d" %(xBrowse1, ensemblPaddingTop, xBrowse2, (ensemblPaddingTop+self.BAND_HEIGHT))
                 if self.dataset.group.species == "mouse":
                     ENSEMBL_HREF = "http://www.ensembl.org/Mus_musculus/contigview?highlight=&chr=%s&vc_start=%d&vc_end=%d&x=35&y=12" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                 else:
                     ENSEMBL_HREF = "http://www.ensembl.org/Rattus_norvegicus/contigview?chr=%s&start=%d&end=%d" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                 ENSEMBL_TITLE = "Click to view this section of the genome in the Ensembl Genome Browser"
                 gifmap.areas.append(make_map_area(shape='rect',coords=ENSEMBL_COORDS,href=ENSEMBL_HREF, title=ENSEMBL_TITLE))
-                canvas.drawRect(xBrowse1, ensemblPaddingTop, xBrowse2, (ensemblPaddingTop+self.ENSEMBL_BAND_HEIGHT), edgeColor=self.CLICKABLE_ENSEMBL_REGION_COLOR, fillColor=self.CLICKABLE_ENSEMBL_REGION_COLOR)
-                canvas.drawLine(xBrowse1, ensemblPaddingTop, xBrowse1, (ensemblPaddingTop+self.ENSEMBL_BAND_HEIGHT), color=self.CLICKABLE_ENSEMBL_REGION_OUTLINE_COLOR)
+                canvas.drawRect(xBrowse1, ensemblPaddingTop, xBrowse2, (ensemblPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_ENSEMBL_REGION_COLOR, fillColor=self.CLICKABLE_ENSEMBL_REGION_COLOR)
+                canvas.drawLine(xBrowse1, ensemblPaddingTop, xBrowse1, (ensemblPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_ENSEMBL_REGION_OUTLINE_COLOR)
             # end for
 
-            canvas.drawString("Click to view the corresponding section of the genome in an 8x expanded WebQTL map", (xLeftOffset + 10), paddingTop + self.WEBQTL_BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_WEBQTL_TEXT_COLOR)
-            canvas.drawString("Click to view the corresponding section of the genome in the UCSC Genome Browser", (xLeftOffset + 10), ucscPaddingTop + self.UCSC_BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_UCSC_TEXT_COLOR)
-            canvas.drawString("Click to view the corresponding section of the genome in the Ensembl Genome Browser", (xLeftOffset+10), ensemblPaddingTop + self.ENSEMBL_BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_ENSEMBL_TEXT_COLOR)
+            canvas.drawString("Click to view the corresponding section of the genome in an 8x expanded WebQTL map", (xLeftOffset + 10), paddingTop + self.BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_WEBQTL_TEXT_COLOR)
+            if self.dataset.group.species == "mouse" or self.dataset.group.species == "rat":
+                canvas.drawString("Click to view the corresponding section of the genome in PhenoGen", (xLeftOffset + 10), phenogenPaddingTop + self.BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_PHENOGEN_TEXT_COLOR)
+            canvas.drawString("Click to view the corresponding section of the genome in the UCSC Genome Browser", (xLeftOffset + 10), ucscPaddingTop + self.BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_UCSC_TEXT_COLOR)
+            canvas.drawString("Click to view the corresponding section of the genome in the Ensembl Genome Browser", (xLeftOffset+10), ensemblPaddingTop + self.BAND_HEIGHT/2, font=clickableRegionLabelFont, color=self.CLICKABLE_ENSEMBL_TEXT_COLOR)
 
             #draw the gray text
             chrFont = pid.Font(ttf="verdana", size=26*zoom, bold=1)
@@ -1764,8 +1589,8 @@ class MarkerRegression(object):
         for i, qtlresult in enumerate(self.qtlresults):
             m = 0
             thisLRSColor = self.colorCollection[0]
-
             if qtlresult['chr'] != previous_chr and self.selectedChr == -1:
+
                 if self.manhattan_plot != True:
                     canvas.drawPolygon(LRSCoordXY,edgeColor=thisLRSColor,closed=0, edgeWidth=lrsEdgeWidth, clipX=(xLeftOffset, xLeftOffset + plotWidth))
 
@@ -1803,7 +1628,6 @@ class MarkerRegression(object):
                 AdditiveCoordXY = []
                 previous_chr = qtlresult['chr']
                 previous_chr_as_int += 1
-
                 newStartPosX = (self.ChrLengthDistList[previous_chr_as_int - 1]+self.GraphInterval)*plotXScale
                 if newStartPosX != oldStartPosX:
                     startPosX += newStartPosX
@@ -1816,7 +1640,6 @@ class MarkerRegression(object):
                 this_chr = str(self.ChrList[self.selectedChr][1]+1)
             if self.selectedChr == -1 or str(qtlresult['chr']) == this_chr:
                 Xc = startPosX + (qtlresult['Mb']-startMb)*plotXScale
-
                 # updated by NL 06-18-2011:
                 # fix the over limit LRS graph issue since genotype trait may give infinite LRS;
                 # for any lrs is over than 460(LRS max in this system), it will be reset to 460
