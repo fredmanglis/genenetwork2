@@ -86,6 +86,26 @@ def make_image(url, alt=None, width=None, height=None, border=None):
 
     return img
 
+def make_input(type, name, value, Class=None, onClick=None):
+    inp = Input(type=type, name=name)
+    if Class:
+        inp.set_attribute("class", Class)
+
+    if onClick:
+        inp.set_attribute("onClick", onClick)
+
+    return inp
+
+def make_link(url, target=None, Class=None, content=()):
+    link = Link(url=url, *content)
+    if target:
+        link.set_attribute("_target", target)
+
+    if Class:
+        link.set_attribute("class", Class)
+
+    return link
+
 #########################################
 #      Inteval Mapping Plot Page
 #########################################
@@ -507,10 +527,12 @@ class MarkerRegression(object):
         ################################################################
         # footnote goes here
         ################################################################
-        btminfo = HT.Paragraph(Id="smallsize") #Small('More information about this graph is available here.')
+        btminfo = Paragraph() #Small('More information about this graph is available here.')
+        btminfo.id="smallsize"
 
         if self.traitList and self.traitList[0].dataset and self.traitList[0].dataset.type == 'Geno':
-            btminfo.append(HT.BR(), 'Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
+            btminfo.append(LineBreak())
+            btminfo.append('Mapping using genotype data as a trait will result in infinity LRS at one locus. In order to display the result properly, all LRSs higher than 100 are capped at 100.')
 
     def drawProbeSetPosition(self, canvas, plotXScale, offset= (40, 120, 80, 10), zoom = 1, startMb = None, endMb = None):
         if len(self.traitList) != 1:
@@ -1215,7 +1237,7 @@ class MarkerRegression(object):
                     else:
                         PHENOGEN_HREF = "https://phenogen.ucdenver.edu/PhenoGen/gene.jsp?speciesCB=Mm&auto=Y&geneTxt=chr%s:%d-%d&genomeVer=mm10" % (self.selectedChr, max(0, calBase-flankingWidthInBases), calBase+flankingWidthInBases)
                     PHENOGEN_TITLE = "Click to view this section of the genome in PhenoGen"
-                    gifmap.areas.append(HT.Area(shape='rect',coords=PHENOGEN_COORDS,href=PHENOGEN_HREF, title=PHENOGEN_TITLE))
+                    gifmap.areas.append(make_map_area(shape='rect',coords=PHENOGEN_COORDS,href=PHENOGEN_HREF, title=PHENOGEN_TITLE))
                     canvas.drawRect(xBrowse1, phenogenPaddingTop, xBrowse2, (phenogenPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_PHENOGEN_REGION_COLOR, fillColor=self.CLICKABLE_PHENOGEN_REGION_COLOR)
                     canvas.drawLine(xBrowse1, phenogenPaddingTop, xBrowse1, (phenogenPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_PHENOGEN_REGION_OUTLINE_COLOR)
 
@@ -1228,7 +1250,7 @@ class MarkerRegression(object):
                 gifmap.areas.append(make_map_area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
                 canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
                 canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
-                gifmap.areas.append(HT.Area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
+                gifmap.areas.append(make_map_area(shape='rect',coords=UCSC_COORDS,href=UCSC_HREF, title=UCSC_TITLE))
                 canvas.drawRect(xBrowse1, ucscPaddingTop, xBrowse2, (ucscPaddingTop+self.BAND_HEIGHT), edgeColor=self.CLICKABLE_UCSC_REGION_COLOR, fillColor=self.CLICKABLE_UCSC_REGION_COLOR)
                 canvas.drawLine(xBrowse1, ucscPaddingTop, xBrowse1, (ucscPaddingTop+self.BAND_HEIGHT), color=self.CLICKABLE_UCSC_REGION_OUTLINE_COLOR)
 
@@ -1914,7 +1936,7 @@ class MarkerRegression(object):
                 tableIterationsCnt = tableIterationsCnt + 1
 
                 this_row = [] #container for the cells of each row
-                selectCheck = HT.Input(type="checkbox", name="searchResult", value=theGO["GeneSymbol"], Class="checkbox", onClick="highlight(this)") #checkbox for each row
+                selectCheck = Input(type="checkbox", name="searchResult", value=theGO["GeneSymbol"], Class="checkbox", onClick="highlight(this)") #checkbox for each row
 
                 geneLength = (theGO["TxEnd"] - theGO["TxStart"])*1000.0
                 tenPercentLength = geneLength*0.0001
@@ -1926,9 +1948,9 @@ class MarkerRegression(object):
 
                     allProbeString = '%s?cmd=sch&gene=%s&alias=1' % (os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), theGO["GeneSymbol"])
                     if theGO["snpCount"]:
-                        snpString = HT.Href(url="http://genenetwork.org/webqtl/main.py?FormID=snpBrowser&chr=%s&start=%s&end=%s&geneName=%s&s1=%d&s2=%d" % (theGO["Chromosome"],
+                        snpString = make_link(url="http://genenetwork.org/webqtl/main.py?FormID=snpBrowser&chr=%s&start=%s&end=%s&geneName=%s&s1=%d&s2=%d" % (theGO["Chromosome"],
                                 theGO["TxStart"], theGO["TxEnd"], theGO["GeneSymbol"], self.diffCol[0], self.diffCol[1]),
-                                text=theGO["snpCount"], target="_blank", Class="normalsize")
+                                              target="_blank", Class="normalsize", (theGO["snpCount"]))
                     else:
                         snpString = 0
 
@@ -1951,7 +1973,7 @@ class MarkerRegression(object):
                     geneDescription = theGO["GeneDescription"]
                     if len(geneDescription) > 26:
                         geneDescription = geneDescription[:26]+"..."
-                    probeSetSearch = HT.Href(allProbeString, ">>", target="_blank")
+                    probeSetSearch = make_link(url=allProbeString, target="_blank", (">>"))
 
                     if theGO["snpDensity"] < 0.000001:
                         snpDensityStr = "0"
@@ -1974,27 +1996,27 @@ class MarkerRegression(object):
 
                         this_row = [selectCheck.__str__(),
                                     str(tableIterationsCnt),
-                                    HT.Href(geneIdString, theGO["GeneSymbol"], target="_blank").__str__() +  "&nbsp;" + probeSetSearch.__str__(),
-                                    HT.Href(mouseStartString, "%0.6f" % txStart, target="_blank").__str__(),
-                                    HT.Href("javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), "%0.3f" % geneLength).__str__(),
+                                    make_link(url=geneIdString, target="_blank", (theGO["GeneSymbol"])).__str__() +  "&nbsp;" + probeSetSearch.__str__(),
+                                    make_link(url=mouseStartString, target="_blank", "%0.6f" % txStart).__str__(),
+                                    make_link(url="javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), ("%0.3f" % geneLength)).__str__(),
                                     snpString,
                                     snpDensityStr,
                                     avgExpr,
                                     humanChr,
-                                    HT.Href(humanStartString, humanStartDisplay, target="_blank").__str__(),
+                                    make_link(url=humanStartString, target="_blank", (humanStartDisplay)).__str__(),
                                     literatureCorrelationString,
                                     geneDescription]
                     else:
                         this_row = [selectCheck.__str__(),
                                     str(tableIterationsCnt),
-                                    HT.Href(geneIdString, theGO["GeneSymbol"], target="_blank").__str__() +  "&nbsp;" + probeSetSearch.__str__(),
-                                    HT.Href(mouseStartString, "%0.6f" % txStart, target="_blank").__str__(),
-                                    HT.Href("javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), "%0.3f" % geneLength).__str__(),
+                                    make_link(url=geneIdString, target="_blank", (theGO["GeneSymbol"])).__str__() +  "&nbsp;" + probeSetSearch.__str__(),
+                                    make_link(url=mouseStartString, target="_blank", ("%0.6f" % txStart)).__str__(),
+                                    make_link(url="javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), ("%0.3f" % geneLength)).__str__(),
                                     snpString,
                                     snpDensityStr,
                                     avgExpr,
                                     humanChr,
-                                    HT.Href(humanStartString, humanStartDisplay, target="_blank").__str__(),
+                                    make_link(url=humanStartString, target="_blank", (humanStartDisplay)).__str__(),
                                     geneDescription]
 
                 gene_table_body.append(this_row)
@@ -2002,12 +2024,12 @@ class MarkerRegression(object):
         elif self.dataset.group.species == 'rat':
             for gIndex, theGO in enumerate(geneCol):
                 this_row = [] #container for the cells of each row
-                selectCheck = HT.Input(type="checkbox", name="searchResult", Class="checkbox", onClick="highlight(this)").__str__() #checkbox for each row
+                selectCheck = make_input(type="checkbox", name="searchResult", Class="checkbox", onClick="highlight(this)").__str__() #checkbox for each row
 
-                webqtlSearch = HT.Href(os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE)+"?cmd=sch&gene=%s&alias=1&species=rat" % theGO["GeneSymbol"], ">>", target="_blank").__str__()
+                webqtlSearch = make_link(url=os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE)+"?cmd=sch&gene=%s&alias=1&species=rat" % theGO["GeneSymbol"], target="_blank", (">>")).__str__()
 
                 if theGO["GeneID"] != "":
-                    geneSymbolNCBI = HT.Href("http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=Graphics&list_uids=%s" % theGO["GeneID"], theGO["GeneSymbol"], Class="normalsize", target="_blank").__str__()
+                    geneSymbolNCBI = make_link(url="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=Graphics&list_uids=%s" % theGO["GeneID"], Class="normalsize", target="_blank", (theGO["GeneSymbol"])).__str__()
                 else:
                     geneSymbolNCBI = theGO["GeneSymbol"]
 
@@ -2047,7 +2069,7 @@ class MarkerRegression(object):
                             str(gIndex+1),
                             webqtlSearch.__str__() + geneSymbolNCBI,
                             theGO["TxStart"],
-                            HT.Href(geneLengthURL, "%0.3f" % (geneLength*1000.0)).__str__(),
+                            make_link(url=geneLengthURL, ("%0.3f" % (geneLength*1000.0))).__str__(),
                             avgExprVal,
                             mouseChr,
                             mouseTxStart,
