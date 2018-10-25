@@ -65,8 +65,8 @@
                     <td>{{ uc.created_timestamp }}</td>
                     <td>{{ uc.changed_timestamp }}</td>
                     {% else %}
-                    <td>{{ timeago(uc.created_timestamp.isoformat() + "Z") }}</td>
-                    <td>{{ timeago(uc.changed_timestamp.isoformat() + "Z") }}</td>
+                    <td>{{ timeago(uc.created_timestamp + "Z") }}</td>
+                    <td>{{ timeago(uc.changed_timestamp + "Z") }}</td>
                     {% endif %}
                     <td align="right">{{ uc.num_members }}</td>
                 </tr>
