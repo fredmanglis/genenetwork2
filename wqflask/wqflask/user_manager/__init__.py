@@ -44,7 +44,7 @@ from utility.tools import SMTP_CONNECT, SMTP_USERNAME, SMTP_PASSWORD
 from .util_functions import actual_hmac_creation
 from .anon_user import AnonUser
 from .user_session import UserSession
-from .register_user import RegisterUser, Password, set_password
+from .register_user import RegisterUser, set_password
 from .util_functions import (timestamp, save_cookie_details, get_cookie_details,
                              delete_cookie_details, cookie_name, get_all_users)
 
