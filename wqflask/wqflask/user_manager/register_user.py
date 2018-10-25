@@ -92,3 +92,22 @@ def set_password(password, user):
     user.password = json.dumps(pwfields.__dict__,
                                     sort_keys=True,
                                    )
+
+class Password(object):
+    def __init__(self, unencrypted_password, salt, iterations, keylength, hashfunc):
+        hashfunc = getattr(hashlib, hashfunc)
+        logger.debug("hashfunc is:", hashfunc)
+        # On our computer it takes around 1.4 seconds in 2013
+        start_time = time.time()
+        salt = base64.b64decode(salt)
+        b_pass = bytearray()
+        b_pass.extend(map(ord, unencrypted_password))
+        self.password = pbkdf2.pbkdf2_hex(b_pass, #str(unencrypted_password),
+                                          salt, iterations, keylength, hashfunc)
+        self.encrypt_time = round(time.time() - start_time, 3)
+        logger.debug("Creating password took:", self.encrypt_time)
+
+def basic_info():
+    return dict(timestamp = timestamp(),
+                ip_address = request.remote_addr,
+                user_agent = request.headers.get('User-Agent'))

@@ -44,7 +44,7 @@ from utility.tools import SMTP_CONNECT, SMTP_USERNAME, SMTP_PASSWORD
 from .util_functions import actual_hmac_creation
 from .anon_user import AnonUser
 from .user_session import UserSession
-from .register_user import RegisterUser, set_password
+from .register_user import RegisterUser, Password, set_password
 from .util_functions import (timestamp, save_cookie_details, get_cookie_details,
                              delete_cookie_details, cookie_name, get_all_users)
 
@@ -117,11 +117,6 @@ class ForgotPasswordEmail(VerificationEmail):
         msg.attach(MIMEText(body, "plain"))
 
         send_email(toaddr, msg.as_string())
-
-def basic_info():
-    return dict(timestamp = timestamp(),
-                ip_address = request.remote_addr,
-                user_agent = request.headers.get('User-Agent'))
 
 @app.route("/n/password_reset", methods=['GET'])
 def password_reset():
