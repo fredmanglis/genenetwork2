@@ -62,7 +62,7 @@ def get_elasticsearch_connection(for_user=True):
         logger.info("ES HOSTS",ELASTICSEARCH_HOSTS)
 
         es = Elasticsearch(
-            ELASTICSEARCH_HOSTS, , timeout=30, retry_on_timeout=True) if (
+            ELASTICSEARCH_HOSTS, timeout=30, retry_on_timeout=True) if (
                 ELASTICSEARCH_HOSTS) else None
 
         if for_user:
