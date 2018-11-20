@@ -1,10 +1,13 @@
 import redis # used for collections
+import datetime
 from flask import request
+from dateutil import (parser,tz)
 from utility.logger import getLogger
 from utility.elasticsearch_tools import (get_elasticsearch_connection,
                                          get_user_by_unique_column)
 
-from .util_functions import (cookie_name, verify_cookie, get_cookie_details)
+from .util_functions import (cookie_name, verify_cookie, get_cookie_details,
+                             update_cookie_details,delete_cookie_details)
 
 Redis = redis.StrictRedis()
 logger = getLogger(__name__)
@@ -23,9 +26,6 @@ class UserSession(object):
             return
         else:
             session_id = verify_cookie(cookie)
-
-            # self.redis_key = self.cookie_name + ":" + session_id
-            # logger.debug("self.redis_key is:", self.redis_key)
             self.session_id = session_id
             cookie_details = get_cookie_details(cookie)
             self.record =  cookie_details["user"] if cookie_details else None #Redis.hgetall(self.redis_key)
@@ -34,12 +34,16 @@ class UserSession(object):
                 self.logged_in = False
                 return
 
-            # Implement similar code for elasticsearch to extend the session
-            # expiry date
-            # if Redis.ttl(self.redis_key) < THREE_DAYS:
-            #     # (Almost) everytime the user does something we extend the session_id in Redis...
-            #     logger.debug("Extending ttl...")
-            #     Redis.expire(self.redis_key, THREE_DAYS)
+            expiry = parser.parse(cookie_details["expire"])
+            now = datetime.datetime.utcnow()
+            if expiry < now:
+                self.logged_in = False
+                delete_cookie_details()
+                return
+            else:
+                expiry = now + datetime.timedelta(days=3)
+                cookie_details["expire"] = expiry.isoformat()
+                update_cookie_details(cookie_details)
 
             logger.debug("record is:", self.record)
             self.logged_in = True
