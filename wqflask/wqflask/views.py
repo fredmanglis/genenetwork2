@@ -65,6 +65,7 @@ from utility.benchmark import Bench
 from pprint import pformat as pf
 
 from wqflask import user_manager
+from wqflask.user_manager.util_functions import (get_cookie_details)
 from wqflask import collect
 from wqflask.database import db_session
 
@@ -75,9 +76,20 @@ from wqflask.collect import get_collections_by_user_key
 import utility.logger
 logger = utility.logger.getLogger(__name__ )
 
-
 @app.before_request
-def connect_db():
+def before_request():
+    from wqflask.collect import get_collections_by_user_key
+    cookie_id = request.cookies.get(user_manager.UserSession.cookie_name)
+    cookie = get_cookie_details(cookie_id)
+    if cookie:
+        session["user"] = cookie["user"]
+        g.num_collections = len(
+            get_collections_by_user_key(session["user"]["user_id"]))
+
+    g.user_session = user_manager.UserSession()
+    logger.debug("CREATED USER_SESSION", g.user_session, g.user_session.logged_in)
+    g.cookie_session = user_manager.AnonUser()
+
     db = getattr(g, '_database', None)
     if db is None:
         logger.debug("Get new database connector")
