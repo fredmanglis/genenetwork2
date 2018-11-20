@@ -4,7 +4,7 @@ from utility.logger import getLogger
 from utility.elasticsearch_tools import (get_elasticsearch_connection,
                                          get_user_by_unique_column)
 
-from .util_functions import verify_cookie
+from .util_functions import (cookie_name, verify_cookie)
 
 Redis = redis.StrictRedis()
 logger = getLogger(__name__)
@@ -13,7 +13,7 @@ THREE_DAYS = 60 * 60 * 24 * 3
 class UserSession(object):
     """Logged in user handling"""
 
-    cookie_name = 'session_id_v1'
+    cookie_name = cookie_name
 
     def __init__(self):
         cookie = request.cookies.get(self.cookie_name)

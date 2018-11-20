@@ -11,7 +11,7 @@ from utility.elasticsearch_tools import (es_save_data, get_item_by_unique_column
 
 logger = getLogger(__name__)
 
-cookie_name = 'session_id_v2'
+cookie_name = 'session_id_v1'
 
 def timestamp():
     return datetime.datetime.utcnow().isoformat()
