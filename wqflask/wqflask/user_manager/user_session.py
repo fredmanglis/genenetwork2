@@ -4,7 +4,7 @@ from utility.logger import getLogger
 from utility.elasticsearch_tools import (get_elasticsearch_connection,
                                          get_user_by_unique_column)
 
-from .util_functions import (cookie_name, verify_cookie)
+from .util_functions import (cookie_name, verify_cookie, get_cookie_details)
 
 Redis = redis.StrictRedis()
 logger = getLogger(__name__)
@@ -24,29 +24,22 @@ class UserSession(object):
         else:
             session_id = verify_cookie(cookie)
 
-            self.redis_key = self.cookie_name + ":" + session_id
-            logger.debug("self.redis_key is:", self.redis_key)
+            # self.redis_key = self.cookie_name + ":" + session_id
+            # logger.debug("self.redis_key is:", self.redis_key)
             self.session_id = session_id
-            self.record = Redis.hgetall(self.redis_key)
+            cookie_details = get_cookie_details(cookie)
+            self.record =  cookie_details["user"] if cookie_details else None #Redis.hgetall(self.redis_key)
 
             if not self.record:
-                # This will occur, for example, when the browser has been left open over a long
-                # weekend and the site hasn't been visited by the user
                 self.logged_in = False
-
-                ########### Grrr...this won't work because of the way flask handles cookies
-                # Delete the cookie
-                #response = make_response(redirect(url_for('login')))
-                #response.set_cookie(self.cookie_name, '', expires=0)
-                #flash(
-                #   "Due to inactivity your session has expired. If you'd like please login again.")
-                #return response
                 return
 
-            if Redis.ttl(self.redis_key) < THREE_DAYS:
-                # (Almost) everytime the user does something we extend the session_id in Redis...
-                logger.debug("Extending ttl...")
-                Redis.expire(self.redis_key, THREE_DAYS)
+            # Implement similar code for elasticsearch to extend the session
+            # expiry date
+            # if Redis.ttl(self.redis_key) < THREE_DAYS:
+            #     # (Almost) everytime the user does something we extend the session_id in Redis...
+            #     logger.debug("Extending ttl...")
+            #     Redis.expire(self.redis_key, THREE_DAYS)
 
             logger.debug("record is:", self.record)
             self.logged_in = True
@@ -111,7 +104,7 @@ class UserSession(object):
 
         es = get_elasticsearch_connection()
 
-        user_email = self.record['user_email_address']
+        user_email = self.record['email_address']
 
         #ZS: Get user's collections if they exist
         response = es.search(
