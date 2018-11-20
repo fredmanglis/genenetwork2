@@ -7,7 +7,8 @@ from flask import request
 from utility.logger import getLogger
 from utility.elasticsearch_tools import (es_save_data, get_item_by_unique_column,
                                          get_elasticsearch_connection,
-                                         es_delete_data_by_id, es_get_all_items)
+                                         es_delete_data_by_id, es_get_all_items,
+                                         es_update_data)
 
 logger = getLogger(__name__)
 
@@ -43,15 +44,28 @@ def actual_hmac_creation(stringy):
     return hm
 
 def save_cookie_details(cookie_id, user):
+    now = datetime.datetime.utcnow()
+    expiry =  now + datetime.timedelta(days=3)
     es_save_data(
         es = get_elasticsearch_connection(),
         index = "cookies",
         doc_type = "local",
         data_item = {
             "cookie_id": cookie_id,
-            "user": user
+            "user": user,
+            "expire": expiry.isoformat()
         },
         data_id = cookie_id)
+
+def update_cookie_details(cookie_details):
+    now = datetime.datetime.utcnow()
+    expiry =  now + datetime.timedelta(days=3)
+    es_update_data(
+        es = get_elasticsearch_connection(),
+        index = "cookies",
+        doc_type = "local",
+        data_item = cookie_details,
+        data_id = cookie_details["cookie_id"])
 
 def get_cookie_details(cookie_id):
     return get_item_by_unique_column(
