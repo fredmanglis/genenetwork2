@@ -45,7 +45,7 @@ from base.webqtlConfig import TMPDIR, GENERATED_TEXT_DIR
 import utility.logger
 logger = utility.logger.getLogger(__name__ )
 
-class MarkerRegression(object):
+class RunMapping(object):
 
     def __init__(self, start_vars, temp_uuid):
 
@@ -178,7 +178,7 @@ class MarkerRegression(object):
             self.score_type = "-log(p)"
             self.manhattan_plot = True
             with Bench("Running GEMMA"):
-                marker_obs = gemma_mapping.run_gemma(self.dataset, self.samples, self.vals, self.covariates, self.use_loco)
+                marker_obs = gemma_mapping.run_gemma(self.this_trait, self.dataset, self.samples, self.vals, self.covariates, self.use_loco, self.maf)
             results = marker_obs
         elif self.mapping_method == "rqtl_plink":
             results = self.run_rqtl_plink()

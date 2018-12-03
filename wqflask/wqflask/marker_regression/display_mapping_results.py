@@ -109,7 +109,7 @@ def make_link(url, target=None, Class=None, content=()):
 #########################################
 #      Inteval Mapping Plot Page
 #########################################
-class MarkerRegression(object):
+class DisplayMappingResults(object):
     cMGraphInterval = 5
     GRAPH_MIN_WIDTH = 900
     GRAPH_MAX_WIDTH = 10000 # Don't set this too high
@@ -569,7 +569,7 @@ class MarkerRegression(object):
                 locPixel = xLeftOffset
                 for i, _chr in enumerate(self.ChrList[1:]):
                     if _chr[0] != Chr:
-                        locPixel += (self.ChrLengthDistList[i-1] + self.GraphInterval)*plotXScale
+                        locPixel += (self.ChrLengthDistList[i] + self.GraphInterval)*plotXScale
                     else:
                         locPixel += Mb*plotXScale
                         break
@@ -768,7 +768,10 @@ class MarkerRegression(object):
                 string2 += 'no control for other QTLs'
 
         if self.this_trait.name:
-            identification = "Trait ID: %s : %s" % (self.dataset.fullname, self.this_trait.name)
+            if self.this_trait.symbol:
+                identification = "Trait ID: %s : %s : %s" % (self.this_trait.symbol, self.dataset.fullname, self.this_trait.name)
+            else:
+                identification = "Trait ID: %s : %s" % (self.dataset.fullname, self.this_trait.name)
             d = 4+ max(canvas.stringWidth(identification, font=labelFont), canvas.stringWidth(string1, font=labelFont), canvas.stringWidth(string2, font=labelFont))
             canvas.drawString(identification,canvas.size[0] - xRightOffset-d,20*fontZoom,font=labelFont,color=labelColor)
         else:
@@ -1946,7 +1949,6 @@ class MarkerRegression(object):
                 if self.ALEX_DEBUG_BOOL_PRINT_GENE_LIST:
                     geneIdString = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=Graphics&list_uids=%s' % theGO["GeneID"]
 
-                    allProbeString = '%s?cmd=sch&gene=%s&alias=1' % (os.path.join(webqtlConfig.CGIDIR, webqtlConfig.SCRIPTFILE), theGO["GeneSymbol"])
                     if theGO["snpCount"]:
                         snpString = make_link(url="http://genenetwork.org/webqtl/main.py?FormID=snpBrowser&chr=%s&start=%s&end=%s&geneName=%s&s1=%d&s2=%d" % (theGO["Chromosome"],
                                 theGO["TxStart"], theGO["TxEnd"], theGO["GeneSymbol"], self.diffCol[0], self.diffCol[1]),
@@ -1973,6 +1975,7 @@ class MarkerRegression(object):
                     geneDescription = theGO["GeneDescription"]
                     if len(geneDescription) > 26:
                         geneDescription = geneDescription[:26]+"..."
+                    # Possibly removed in testing branch
                     probeSetSearch = make_link(url=allProbeString, target="_blank", content=(">>"))
 
                     if theGO["snpDensity"] < 0.000001:
@@ -1996,8 +1999,8 @@ class MarkerRegression(object):
 
                         this_row = [selectCheck.__str__(),
                                     str(tableIterationsCnt),
-                                    make_link(url=geneIdString, target="_blank", content=(theGO["GeneSymbol"])).__str__() +  "&nbsp;" + probeSetSearch.__str__(),
-                                    make_link(url=mouseStartString, target="_blank", content=("%0.6f" % txStart)).__str__(),
+                                    make_link(url=geneIdString, content=theGO["GeneSymbol"], target="_blank").__str__(),
+                                    make_link(url=mouseStartString, content=("%0.6f" % txStart), target="_blank").__str__(),
                                     make_link(url="javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), content=("%0.3f" % geneLength)).__str__(),
                                     snpString,
                                     snpDensityStr,
@@ -2009,8 +2012,8 @@ class MarkerRegression(object):
                     else:
                         this_row = [selectCheck.__str__(),
                                     str(tableIterationsCnt),
-                                    make_link(url=geneIdString, target="_blank", content=(theGO["GeneSymbol"])).__str__() +  "&nbsp;" + probeSetSearch.__str__(),
-                                    make_link(url=mouseStartString, target="_blank", content=("%0.6f" % txStart)).__str__(),
+                                    make_link(url=geneIdString, content=theGO["GeneSymbol"], target="_blank").__str__(),
+                                    make_link(url=mouseStartString, content=("%0.6f" % txStart), target="_blank").__str__(),
                                     make_link(url="javascript:rangeView('%s', %f, %f)" % (str(chr_as_int), txStart-tenPercentLength, txEnd+tenPercentLength), content=("%0.3f" % geneLength)).__str__(),
                                     snpString,
                                     snpDensityStr,
